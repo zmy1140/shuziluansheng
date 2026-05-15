@@ -182,6 +182,8 @@ npm.cmd run preview
 
 2026-05-15：按用户要求将项目初始化为 Git 工程，新增 `.gitignore`，排除 `node_modules/`、`dist/`、`.vite/`、`coverage/`、日志、编辑器配置、`.superpowers/` 和 `transcripts/`。本次未修改业务代码，当前仓库刚初始化，所有源码和文档仍处于未跟踪状态，尚未创建首次提交。
 
+2026-05-15：按用户要求将代码提交并推送到 GitHub 仓库 `https://github.com/zmy1140/shuziluansheng.git`。首次提交为 `b2917c9`（`Initial project import`），随后补充文档记录并再次推送；本地 `main` 分支已跟踪 `origin/main`。推送前验证：`npm.cmd test` 通过，`npm.cmd run build` 通过；构建仍有 Three.js chunk size 警告，属当前可接受现象。
+
 ## 本轮交接摘要
 
 本轮主要完成界面可读性和技术诊断表达调整，没有接入真实设备、后端或模型。
