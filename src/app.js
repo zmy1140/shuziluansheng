@@ -297,9 +297,29 @@ export function createAppShell() {
                   <div class="scene-overlay is-hidden" data-model-overlay>
                     <div class="overlay-card">
                       <span>模型状态</span>
-                      <strong data-model-status>当前显示：默认磨抛工位示意体</strong>
+                      <strong data-model-status>当前显示：厚板螺旋磨抛演示</strong>
                     </div>
                   </div>
+                </div>
+                <div class="processing-demo-panel">
+                  <div>
+                    <strong>3D加工过程演示</strong>
+                    <p>圆柱磨头沿厚板表面执行螺旋向内收缩轨迹，颜色表示模拟粗糙度风险，不代表真实Ra预测或真实仿真结果。</p>
+                  </div>
+                  <label>
+                    速度
+                    <select data-processing-speed aria-label="加工演示速度">
+                      <option value="0.5">0.5x</option>
+                      <option value="1" selected>1x</option>
+                      <option value="1.5">1.5x</option>
+                      <option value="2">2x</option>
+                    </select>
+                  </label>
+                  <button class="tool-button" type="button" data-processing-reset>重置</button>
+                </div>
+                <div class="simulation-status" data-simulation-status>
+                  <strong>仿真结果颜色映射原型</strong>
+                  <span>待接入简化厚板算例：Mises应力/位移幅值。当前颜色先由模拟风险驱动。</span>
                 </div>
               </div>
               <div class="monitor-card status-summary">

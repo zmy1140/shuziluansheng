@@ -11,6 +11,8 @@ const uploadInput = shell.querySelector("[data-upload-input]");
 const modelStatus = shell.querySelector("[data-model-status]");
 const modelOverlay = shell.querySelector("[data-model-overlay]");
 const fitViewButton = shell.querySelector("[data-fit-view-button]");
+const processingSpeed = shell.querySelector("[data-processing-speed]");
+const processingReset = shell.querySelector("[data-processing-reset]");
 const activeTitle = shell.querySelector("[data-active-title]");
 const viewTargets = [...shell.querySelectorAll("[data-view-target]")];
 const viewPanels = [...shell.querySelectorAll("[data-view-panel]")];
@@ -29,7 +31,12 @@ function showModelStatus(message, { persist = false } = {}) {
   }
 }
 
-const { loadLocalModel, fitActiveObjectToView } = setupScene(
+const {
+  loadLocalModel,
+  fitActiveObjectToView,
+  setProcessingSpeed,
+  resetProcessingDemo,
+} = setupScene(
   sceneRoot,
   modelStatus,
   showModelStatus,
@@ -72,6 +79,14 @@ uploadInput.addEventListener("change", (event) => {
 
 fitViewButton.addEventListener("click", () => {
   fitActiveObjectToView();
+});
+
+processingSpeed.addEventListener("change", () => {
+  setProcessingSpeed(Number(processingSpeed.value));
+});
+
+processingReset.addEventListener("click", () => {
+  resetProcessingDemo();
 });
 
 const metricNodes = {

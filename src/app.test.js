@@ -38,6 +38,28 @@ describe("createAppShell", () => {
     expect(trend.textContent).toContain("Ra预测");
   });
 
+  test("renders processing demo controls and roughness risk explanation", () => {
+    const shell = createAppShell();
+    const overview = shell.querySelector("[data-view-panel='overview']");
+
+    expect(overview.querySelector("[data-processing-speed]")).not.toBeNull();
+    expect(overview.querySelector("[data-processing-reset]")).not.toBeNull();
+    expect(overview.textContent).toContain("3D加工过程演示");
+    expect(overview.textContent).toContain("螺旋向内收缩轨迹");
+    expect(overview.textContent).toContain("模拟粗糙度风险");
+    expect(overview.textContent).toContain("不代表真实Ra预测或真实仿真结果");
+  });
+
+  test("renders Abaqus color mapping prototype status as non-real-process evidence", () => {
+    const shell = createAppShell();
+    const overview = shell.querySelector("[data-view-panel='overview']");
+
+    expect(overview.querySelector("[data-simulation-status]")).not.toBeNull();
+    expect(overview.textContent).toContain("仿真结果颜色映射原型");
+    expect(overview.textContent).toContain("Mises应力/位移幅值");
+    expect(overview.textContent).toContain("简化厚板算例");
+  });
+
   test("uses signal-specific legend color selectors", () => {
     const css = readFileSync("src/style.css", "utf8");
 

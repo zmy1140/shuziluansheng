@@ -365,6 +365,59 @@ button {
   display: block;
 }
 
+.processing-demo-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #213245;
+  border-radius: 6px;
+  background: #0b1118;
+}
+
+.processing-demo-panel strong,
+.simulation-status strong {
+  color: #ffffff;
+}
+
+.processing-demo-panel p {
+  margin: 4px 0 0;
+  color: #86a8bd;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.processing-demo-panel label {
+  display: grid;
+  gap: 4px;
+  color: #8cabbe;
+  font-size: 12px;
+}
+
+.processing-demo-panel select {
+  border: 1px solid #263647;
+  border-radius: 5px;
+  padding: 7px 8px;
+  background: #101720;
+  color: #ffffff;
+}
+
+.simulation-status {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #283a4c;
+  border-radius: 6px;
+  background: #101720;
+  color: #8cabbe;
+  font-size: 12px;
+}
+
 .scene-overlay {
   position: absolute;
   inset: 12px 12px auto auto;
@@ -797,6 +850,11 @@ th {
   .view-title {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .processing-demo-panel,
+  .simulation-status {
+    grid-template-columns: 1fr;
   }
 
   .scene-stage {
