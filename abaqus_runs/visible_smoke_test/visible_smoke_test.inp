@@ -1,0 +1,63 @@
+*Heading
+Visible Abaqus Standard smoke test: one-element tension block
+**
+** Purpose:
+** - Verify Abaqus/Standard can run from a visible command window.
+** - Keep the model tiny while using many increments so progress is observable.
+**
+*Preprint, echo=NO, model=NO, history=NO, contact=NO
+**
+*Part, name=TENSION_BLOCK
+*Node
+1, 0.0, 0.0, 0.0
+2, 1.0, 0.0, 0.0
+3, 1.0, 0.2, 0.0
+4, 0.0, 0.2, 0.0
+5, 0.0, 0.0, 0.2
+6, 1.0, 0.0, 0.2
+7, 1.0, 0.2, 0.2
+8, 0.0, 0.2, 0.2
+*Element, type=C3D8R
+1, 1, 2, 3, 4, 5, 6, 7, 8
+*Nset, nset=FIXED_FACE
+1, 4, 5, 8
+*Nset, nset=PULLED_FACE
+2, 3, 6, 7
+*Elset, elset=BLOCK
+1
+*Solid Section, elset=BLOCK, material=STEEL
+*End Part
+**
+*Assembly, name=ASSEMBLY
+*Instance, name=TENSION_BLOCK-1, part=TENSION_BLOCK
+*End Instance
+*Nset, nset=FIXED_FACE, instance=TENSION_BLOCK-1
+1, 4, 5, 8
+*Nset, nset=PULLED_FACE, instance=TENSION_BLOCK-1
+2, 3, 6, 7
+*Elset, elset=BLOCK, instance=TENSION_BLOCK-1
+1
+*End Assembly
+**
+*Material, name=STEEL
+*Elastic
+210000.0, 0.3
+**
+*Boundary
+FIXED_FACE, 1, 6, 0.0
+PULLED_FACE, 2, 3, 0.0
+**
+*Step, name=VISIBLE_STATIC_TENSION, nlgeom=NO, inc=80
+*Static
+0.02, 1.0, 1e-05, 0.02
+*Boundary
+PULLED_FACE, 1, 1, 0.02
+*Output, field, frequency=5
+*Node Output
+U, RF
+*Element Output
+S, E
+*Output, history, frequency=1
+*Node Output, nset=PULLED_FACE
+U, RF
+*End Step

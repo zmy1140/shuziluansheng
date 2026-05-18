@@ -1,6 +1,6 @@
 # 项目上下文交接文档
 
-最后更新：2026-05-15
+最后更新：2026-05-18
 
 ## 给新对话的最短接手摘要
 
@@ -230,3 +230,29 @@ npm.cmd run preview
 ## 给下一次 Codex 对话的建议开头
 
 继续数字孪生前端项目。请先阅读 `AGENTS.md`、`docs/context.md`、`docs/todo.md`，然后根据 `docs/todo.md` 的 P0 继续。项目路径是 `C:\Users\123\Documents\Codex\数字孪生前端`。本项目要求每次任务完成后更新 `docs/context.md`。
+
+## 2026-05-15 任务理解梳理记录
+
+本次根据 `目标.txt`、`docs/context.md` 和 `docs/todo.md` 梳理师兄布置任务。结论是：师兄当前要求不是一次性完成完整数字孪生、真实传感器接入、后端、预测算法或闭环调控，而是先完成可本地运行的网页端数字孪生前端壳体，核心包括 Vite 前端项目、Three.js 3D 视窗、GLB 模型加载、基础工控监测布局，以及力/振动/声发射/粗糙度预测等模块的展示入口和数据占位。下一步优先目标应从“继续美化界面”转向“确认方向和定义数据”：先与师兄/导师确认当前本地工控监测界面方向，再定义第一版实验数据字段表和采集链路，随后做 CSV/JSON 本地数据回放。
+
+补充：随后实际转写并查看了用户提供的视频 `bandicam 2026-05-15 16-10-03-498.mp4`，转写文件位于 `transcripts/bandicam_2026-05-15_16-10-03-498_transcript_tiny.txt`。视频中师兄进一步强调：当前静态 GLB 导入只是基础，后续更关键的是做出可展示的加工过程动画和渲染效果，例如工件/磨头/蛇形臂运动过程、加工轨迹、局部接触区域、颜色云图或温度/应力类场量映射。传感器接口和 PLC/采集卡链路可以后置，先把渲染展示与运动过程这条线解决；长期再接 PLC、传感器定压值/加速度等数据，并与仿真或实验结果做对比。下一步前端任务应增加一个明确方向：设计 3D 动画/渲染演示方案，至少用简单工件、磨头轨迹、局部颜色映射做第一版可视化。
+
+2026-05-15：按用户要求新增根目录纪要 `师兄视频任务技术路线纪要.txt`，用普通中文梳理视频中师兄交代的任务、技术路线、下一步推进顺序和风险边界。纪要明确当前主线应从静态 GLB 展示升级到 3D 加工过程动画与局部颜色渲染；同时强调第一版可使用模拟轨迹和模拟颜色，不代表真实传感器、真实仿真、真实 PLC 接入或真实粗糙度预测模型。本次未修改业务代码，未运行前端测试或构建。
+
+2026-05-18：根据用户提供的 `最终版YE6275D数据采集器使用手册(1).pdf` 初步确认三轴加速度采集链路：YE6275D 是面向工业现场振动监测的 12 通道以太网数据采集器，前 8 通道可配置 IEPE、4-20mA、电压输入，每通道采样率可选 25600/12800/6400/3200/1600 Hz，支持上位机实时波形、离线波形和 FFT 频谱，适合三轴 IEPE 加速度传感器的振动原始波形采集。普通 PLC 模拟量输入模块更适合低频过程量、状态监控和控制闭环，不宜作为振动 FFT、冲击、峰值因子等高频特征的主采集设备。后续硬件设计建议采用“YE6275D/上位机或算法服务采振动原始数据，PLC 采低频状态和执行控制，前端显示两路数据融合结果”的架构；还需核实用户所称“汇川 AI820”的准确型号，因为公开检索中 AI820 更常见为 ABB 模拟量模块，汇川常见模拟量模块命名更接近 AM600-4AD 等。
+
+2026-05-18：根据用户要求规划未来一周工作节奏。建议 2026-05-18 至 2026-05-24 的主线是：先确认中文显示、当前界面和硬件链路边界；随后定义第一版数据字段；再实现 3D 加工动画最小演示，包括简单工件、磨头轨迹和局部颜色渲染；最后整理一份可给师兄汇报的演示说明。该周目标不是接入真实传感器或真实粗糙度模型，而是让项目从“静态 GLB/监测壳体”推进到“可讲清楚流程的加工过程可视化原型”。
+
+2026-05-18：用户提出项目会用到 Abaqus 仿真，并询问 Codex 是否能接入。当前本机命令行未在 `PATH` 中发现 `abaqus` 命令，也未发现常见 `C:\SIMULIA` 安装目录，因此暂不能直接调用 Abaqus/CAE 或 Abaqus 求解器。后续若本机已安装并授权 Abaqus，可通过 Abaqus 命令行运行 Python 脚本、提交 `.inp` 作业、读取 `.odb` 后处理结果，并把导出的 CSV/JSON/VTK/GLTF 等结果接入前端；当前前端仍不应声称已经接入真实 Abaqus 仿真。
+
+2026-05-18：针对 SIMULIA Established Products 2025 安装组件，建议本项目若要在本机完成 Abaqus 建模、求解和后处理，至少安装 Abaqus CAE、Abaqus/Standard Solver、Abaqus/Explicit Solver、Abaqus ODB API Services；Abaqus Samples 建议安装便于检查示例和脚本。Cosimulation、Tosca、fe-safe、CAD associative interfaces 等组件不是当前数字孪生前端和粗糙度展示主线必需，只有在明确需要联合仿真、优化、疲劳分析或 CAD 关联更新时再安装。若本机只运行前端并展示别人导出的 CSV/JSON/图片/GLB 结果，则不必在本机安装 Abaqus。
+
+2026-05-18：再次检查本机 Abaqus 状态，已发现 SIMULIA 安装在 `D:\SIMULIA`，命令入口位于 `D:\SIMULIA\Commands\abaqus.bat` 和 `D:\SIMULIA\Commands\abq2025.bat`。执行 `information=system` 和 `information=release` 均成功，确认当前 Codex 可通过完整路径调用 Abaqus 2025 命令行。系统信息显示 CPU 为 i5-12400F、内存约 16GB、显卡 GTX 1650 SUPER；当前未检测到 C++/Fortran 编译器，因此不适合直接编译用户子程序，但普通 `.inp` 提交、CAE Python 脚本执行和 ODB 后处理可继续尝试。后续跑实际仿真仍需确认 license 是否对求解器可用，并准备 `.inp`/`.cae` 或建模脚本。
+
+2026-05-18：已建立并运行 Abaqus 最小测试模型，路径为 `abaqus_runs/minimal_cantilever/`。算例为单个 C3D8R 实体单元悬臂块：左端面固定，右端面施加竖向集中力，使用 Abaqus/Standard 静力步求解。命令 `D:\SIMULIA\Commands\abaqus.bat job=minimal_cantilever input=minimal_cantilever.inp interactive` 已成功完成，并生成 `minimal_cantilever.odb`；license 输出显示 Abaqus/Standard 从本机 FlexNet server `zmy` 检出 5 tokens，求解器可用。新增 `extract_results.py`，已通过 `abaqus python extract_results.py` 从 ODB 导出 `minimal_cantilever_summary.json` 和 `minimal_cantilever_loaded_face_displacement.csv`；结果摘要包括加载端平均 U2 约 `-13.1333`、最大 Mises 约 `173.2051`。已在 `.gitignore` 中忽略 Abaqus 求解产物，避免提交 `.odb/.dat/.msg/.sta` 等文件。本次验证：`npm.cmd test` 通过，`npm.cmd run build` 通过；构建仍有 Three.js chunk size 警告，属既有可接受现象。
+
+2026-05-18：按用户要求再次建立并运行一个可见进度的 Abaqus 最小测试模型，路径为 `abaqus_runs/visible_smoke_test/`。算例为单个 C3D8R 拉伸块：左端面固定，右端面施加 X 向位移 `0.02`，使用 Abaqus/Standard 静力步并强制较小增量，最终 `.sta` 显示 50 个增量并成功完成。已通过 `Start-Process` 打开 Abaqus/CAE 图形界面，并启动独立可见的 `cmd.exe` 窗口执行 `D:\SIMULIA\Commands\abaqus.bat job=visible_smoke_test input=visible_smoke_test.inp interactive`，用户可在桌面窗口中看到求解阶段输出。随后使用 `abaqus cae database=visible_smoke_test.odb` 打开 ODB，并通过 `extract_results.py` 导出 `visible_smoke_test_summary.json` 和 `visible_smoke_test_pulled_face_displacement.csv`；结果摘要包括平均 U1 约 `0.02`、最大 Mises 约 `3230.7693`、帧数 `11`。本次验证：`npm.cmd test` 通过，`npm.cmd run build` 通过；构建仍有 Three.js chunk size 警告，属既有可接受现象。
+
+2026-05-18：修正 Abaqus 图形界面打开方式记录。`.odb` 结果文件不应使用 `abaqus cae database=...` 打开，因为该参数面向 `.cae` 模型数据库；错误命令会提示找不到 `.cae` 文件。打开 ODB 应使用 `D:\SIMULIA\Commands\abaqus.bat viewer database=<odb-name>` 或 `D:\SIMULIA\Commands\abq_odb_open.bat <odb完整路径>`。本次确认 `ABQcaeG` 和 `ABQvwrG` 图形进程可启动，并通过 Windows API 尝试将 `Abaqus/CAE 2025 [Viewport: 1]` 与 `Abaqus/Viewer 2025 [Viewport: 1]` 拉到前台。若后续 Viewer 打开 ODB 出现 `ABQvwrG` segmentation fault，应优先排查图形驱动/OpenGL、Abaqus Viewer 启动环境和 ODB 路径，不要误判为求解器或 license 失败。
+
+2026-05-18：用户反馈 Abaqus/CAE 打开后看不到“仿真的东西”。根因是前面主要走 `.inp -> .odb` 求解链路，只生成了 ODB 结果，没有自动生成可在 CAE 中显示模型树的 `.cae` 模型数据库；同时同一个 `.cae` 被已打开窗口占用时，新的 CAE 脚本无法以可写方式再次打开。已新增 `abaqus_runs/visible_smoke_test/build_cae_model.py` 生成 CAE 模型数据库，并新增 `show_cae_model.py`/`show_result.py` 辅助显示脚本；实际可视化使用无中文路径临时目录 `D:\abaqus_visible_test`，其中 `visible_smoke_test.cae` 是生成的模型数据库，`visible_smoke_test_view.cae` 是为避开文件锁复制出的查看副本。已成功打开窗口 `Abaqus/CAE 2025 - Model Database: D:\abaqus_visible_test\visible_smoke_test_view.cae [Viewport: 1]`，脚本日志显示 `Displayed CAE assembly from: visible_smoke_test_view.cae`。后续给用户演示时，如果要在 CAE 里看模型，应打开 `.cae`；如果要看云图和变形结果，应打开 `.odb`。

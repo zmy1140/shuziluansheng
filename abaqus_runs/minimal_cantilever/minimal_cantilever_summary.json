@@ -1,0 +1,10 @@
+{
+  "average_u2": -13.133347511291504,
+  "job": "minimal_cantilever",
+  "loaded_face_node_count": 4,
+  "maximum_mises": 173.205078125,
+  "maximum_u2": -13.133347511291504,
+  "minimum_u2": -13.133347511291504,
+  "odb": "C:\\Users\\123\\Documents\\Codex\\\u6570\u5b57\u5b6a\u751f\u524d\u7aef\\abaqus_runs\\minimal_cantilever\\minimal_cantilever.odb",
+  "step": "STATIC_LOAD"
+}

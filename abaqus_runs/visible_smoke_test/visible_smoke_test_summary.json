@@ -1,0 +1,11 @@
+{
+  "average_u1": 0.019999999552965164,
+  "frame_count": 11,
+  "job": "visible_smoke_test",
+  "maximum_mises": 3230.769287109375,
+  "maximum_u1": 0.019999999552965164,
+  "minimum_u1": 0.019999999552965164,
+  "odb": "C:\\Users\\123\\Documents\\Codex\\\u6570\u5b57\u5b6a\u751f\u524d\u7aef\\abaqus_runs\\visible_smoke_test\\visible_smoke_test.odb",
+  "pulled_face_node_count": 4,
+  "step": "VISIBLE_STATIC_TENSION"
+}

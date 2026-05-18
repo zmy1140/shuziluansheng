@@ -18,6 +18,23 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Abaqus solver outputs
+*.abq
+*.cae
+*.com
+*.dat
+*.mdl
+*.msg
+*.odb
+*.prt
+*.sim
+*.sta
+*.stt
+*.pac
+*.sel
+*.res
+*.lck
+
 # Editor and OS files
 .vscode/
 .idea/

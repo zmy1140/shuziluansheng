@@ -1,0 +1,59 @@
+*Heading
+Minimal Abaqus Standard test model: one-element cantilever block
+**
+** Units are arbitrary but internally consistent.
+** Geometry: 1.0 x 0.1 x 0.1 block, modeled with one C3D8R element.
+** Boundary: x=0 face fixed.
+** Load: vertical force on x=1 face nodes.
+**
+*Preprint, echo=NO, model=NO, history=NO, contact=NO
+**
+*Part, name=CANTILEVER
+*Node
+1, 0.0, 0.0, 0.0
+2, 1.0, 0.0, 0.0
+3, 1.0, 0.1, 0.0
+4, 0.0, 0.1, 0.0
+5, 0.0, 0.0, 0.1
+6, 1.0, 0.0, 0.1
+7, 1.0, 0.1, 0.1
+8, 0.0, 0.1, 0.1
+*Element, type=C3D8R
+1, 1, 2, 3, 4, 5, 6, 7, 8
+*Nset, nset=FIXED_FACE
+1, 4, 5, 8
+*Nset, nset=LOADED_FACE
+2, 3, 6, 7
+*Elset, elset=SOLID_BLOCK
+1
+*Solid Section, elset=SOLID_BLOCK, material=STEEL
+*End Part
+**
+*Assembly, name=ASSEMBLY
+*Instance, name=CANTILEVER-1, part=CANTILEVER
+*End Instance
+*Nset, nset=FIXED_FACE, instance=CANTILEVER-1
+1, 4, 5, 8
+*Nset, nset=LOADED_FACE, instance=CANTILEVER-1
+2, 3, 6, 7
+*Elset, elset=SOLID_BLOCK, instance=CANTILEVER-1
+1
+*End Assembly
+**
+*Material, name=STEEL
+*Elastic
+210000.0, 0.3
+**
+*Boundary
+FIXED_FACE, 1, 6, 0.0
+**
+*Step, name=STATIC_LOAD, nlgeom=NO
+*Static
+0.1, 1.0, 1e-05, 1.0
+*Cload
+LOADED_FACE, 2, -0.25
+*Output, field, variable=PRESELECT
+*Output, history
+*Node Output, nset=LOADED_FACE
+U, RF
+*End Step
