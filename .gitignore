@@ -23,6 +23,7 @@ pnpm-debug.log*
 *.cae
 *.com
 *.dat
+*.env
 *.mdl
 *.msg
 *.odb

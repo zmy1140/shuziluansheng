@@ -30,3 +30,26 @@
 - 粗糙度 Ra 的测量方法、标签文件格式和实验工况关联方式。
 - Abaqus 真实磨抛接触模型的边界条件、材料模型、接触设置和输出变量。
 
+### 第二阶段 3D 加工过程动画原型
+
+- 默认 3D 视窗已从静态示意模型改为厚板工件、圆柱磨头和螺旋向内收缩加工轨迹。
+- 磨头沿螺旋轨迹循环运动，并在厚板表面形成局部颜色色块和运动痕迹。
+- 颜色含义限定为“模拟粗糙度风险”，不得解释为真实 Ra、真实温度场、真实应力场或真实仿真结果。
+- 总览页新增速度选择和重置按钮，便于现场演示讲解。
+- 导入 GLB 后，演示动画按模型包围盒拟合到模型上方的加工平面；该贴合是几何包围盒近似，不是真实曲面投影或接触求解。
+
+### Abaqus 颜色映射链路原型
+
+- 新增 `abaqus_runs/plate_color_mapping/` 简化厚板算例，用于验证 “Abaqus ODB -> JSON/CSV -> 前端颜色映射” 链路。
+- 算例为简化弹性厚板拉伸，输出 15 个单元的 Mises 应力样本；该模型不代表真实磨抛接触工况。
+- 后处理脚本将 ODB 结果导出为 `plate_color_mapping_result.json`、`plate_color_mapping_result.csv` 和 `public/simulation/plate_color_mapping.json`。
+- 前端新增 `mapSimulationSamplesToGrid()`，将仿真样本按坐标映射到厚板风险色块网格。
+- 调试记录：首次 Abaqus 输入因 C3D8R 节点顺序与厚度方向不一致导致单元体积为零/负，已通过改用 Abaqus X-Y 板面、Z 厚度并在后处理中映射坐标解决。
+- 编码记录：Abaqus Python 写 JSON 时需显式使用 UTF-8，否则中文说明在前端/Node 读取时可能乱码。
+
+### 本次验证
+
+- `npm.cmd test`：2 个测试文件、12 个测试通过。
+- `npm.cmd run build`：构建通过；Three.js chunk size 警告仍为既有可接受现象。
+- Abaqus：`plate_color_mapping` 作业完成，后处理导出 15 个单元样本。
+- 浏览器自动化：尝试使用内置浏览器连接本地 Vite 页面时超时；本次未完成自动截图复核。

@@ -13,6 +13,7 @@ const modelOverlay = shell.querySelector("[data-model-overlay]");
 const fitViewButton = shell.querySelector("[data-fit-view-button]");
 const processingSpeed = shell.querySelector("[data-processing-speed]");
 const processingReset = shell.querySelector("[data-processing-reset]");
+const simulationStatus = shell.querySelector("[data-simulation-status]");
 const activeTitle = shell.querySelector("[data-active-title]");
 const viewTargets = [...shell.querySelectorAll("[data-view-target]")];
 const viewPanels = [...shell.querySelectorAll("[data-view-panel]")];
@@ -36,6 +37,7 @@ const {
   fitActiveObjectToView,
   setProcessingSpeed,
   resetProcessingDemo,
+  applySimulationResult,
 } = setupScene(
   sceneRoot,
   modelStatus,
@@ -88,6 +90,23 @@ processingSpeed.addEventListener("change", () => {
 processingReset.addEventListener("click", () => {
   resetProcessingDemo();
 });
+
+fetch("/simulation/plate_color_mapping.json")
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
+  })
+  .then((result) => {
+    applySimulationResult(result);
+    simulationStatus.querySelector("span").textContent =
+      `已载入${result.source ?? "简化厚板算例"}：${result.valueLabel ?? "Mises应力/位移幅值"}，仅用于颜色映射原型。`;
+  })
+  .catch(() => {
+    simulationStatus.querySelector("span").textContent =
+      "未载入本地仿真样例，当前颜色先由模拟粗糙度风险驱动。";
+  });
 
 const metricNodes = {
   force: shell.querySelector("[data-force-value]"),

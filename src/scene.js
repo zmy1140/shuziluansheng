@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { mapSimulationSamplesToGrid } from "./simulation.js";
 
 export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -76,6 +77,7 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
 
   const riskCells = [];
   const riskValues = [];
+  const simulationRiskValues = [];
   const riskCellGroup = new THREE.Group();
   const riskColumns = 26;
   const riskRows = 16;
@@ -103,6 +105,7 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
       );
       riskCells.push(cell);
       riskValues.push(0);
+      simulationRiskValues.push(0);
       riskCellGroup.add(cell);
     }
   }
@@ -213,7 +216,7 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
 
   function updateRiskCellColors() {
     riskCells.forEach((cell, index) => {
-      const value = THREE.MathUtils.clamp(riskValues[index], 0, 1);
+      const value = THREE.MathUtils.clamp(Math.max(riskValues[index], simulationRiskValues[index]), 0, 1);
       const color = value < 0.55
         ? lowRiskColor.clone().lerp(midRiskColor, value / 0.55)
         : midRiskColor.clone().lerp(highRiskColor, (value - 0.55) / 0.45);
@@ -392,6 +395,22 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
     fitActiveObjectToView,
     setProcessingSpeed(value) {
       processingSpeed = Number.isFinite(value) && value > 0 ? value : 1;
+    },
+    applySimulationResult(result) {
+      const samples = result?.samples ?? [];
+      const valueKey = result?.valueKey ?? "mises";
+      const mappedValues = mapSimulationSamplesToGrid(samples, {
+        columns: riskColumns,
+        rows: riskRows,
+        width: plateWidth,
+        depth: plateDepth,
+        valueKey,
+      });
+      mappedValues.forEach((value, index) => {
+        simulationRiskValues[index] = value;
+      });
+      updateRiskCellColors();
+      setStatus("已载入简化厚板仿真结果：颜色映射为原型演示");
     },
     resetProcessingDemo() {
       processingProgress = 0;
