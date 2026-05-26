@@ -1,0 +1,15 @@
+{
+  "source": "Abaqus简化热源温度场",
+  "model": "moving_heat_source_plate",
+  "note": "占位参数的移动热源瞬态热传导结果，不代表真实实验温度。",
+  "grid": {
+    "columns": 40,
+    "rows": 40,
+    "widthMm": 100.0,
+    "depthMm": 100.0
+  },
+  "temperatureRangeC": {
+    "min": 26.0,
+    "max": 92.0
+  }
+}

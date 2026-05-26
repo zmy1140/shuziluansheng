@@ -1,6 +1,6 @@
 # 后续任务清单
 
-最后更新：2026-05-25
+最后更新：2026-05-26
 
 ## 执行原则
 
@@ -17,7 +17,7 @@
 - 和师兄/导师确认当前“本地工控监测软件 + 3D 工位视窗”的界面方向是否符合汇报和课题预期。
 - 确认采集与控制硬件链路：核对“汇川 AI820”的准确型号、输入类型、采样频率、通信协议，以及三轴振动和声发射是否需要独立高速采集卡。
 - 明确第一版粗糙度预测演示目标：只展示预测结果，还是需要能读取一段实验数据并输出 Ra。
-- 结合师兄视频要求，继续明确后续真实仿真边界：当前已完成第一版直线打磨温度场演示，后续需要确认真实 Abaqus 热源、材料、接触和输出格式。
+- 结合师兄视频要求，继续明确后续真实仿真边界：当前已完成第一版 Abaqus 简化移动热源温度场链路，后续需要确认真实热源功率、材料热参数、接触/摩擦热比例、散热边界和验证方式。
 
 ## 已完成
 
@@ -41,12 +41,13 @@
 - 2026-05-24：完成第一版局部打磨温度场演示：固定工具模型 `public/models/tool.glb` 自动加载，路径由 `data/demo/line_grinding_path.csv` 经 `npm.cmd run convert:path` 转为 `public/paths/line_grinding_path.json`，前端读取 `public/simulation/temperature_demo.json` 将演示温度场映射到平板/展开面网格颜色；当前仍为演示数据，不代表真实 Abaqus 或实验温度。
 - 2026-05-25：确定温度场/仿真结果 CSV 到前端 JSON 的第一版格式。新增 `src/temperature.js`、`scripts/convert-temperature-csv.js`、`data/demo/temperature_field.csv`、`public/simulation/temperature_field.json` 和 `docs/temperature-field-format.md`；标准 CSV 表头为 `x_mm,z_mm,temperature_c`，可由 Abaqus 后处理或实验测温整理脚本导出，再通过 `npm.cmd run convert:temperature` 转为前端 JSON。
 - 2026-05-26：复核温度场 CSV/JSON 链路中文编码，确认 `src/temperature.js`、温度生成脚本和温度 JSON 实际为正常 UTF-8 中文；普通 PowerShell `Get-Content` 可能显示乱码。已更新 `src/temperature.test.js`，用正常中文断言保护 `valueLabel` 和 `note` 字段。
+- 2026-05-26：完成第一版 Abaqus 简化移动热源温度场链路。新增 `abaqus_runs/moving_heat_source_plate/`，生成 `100 mm x 100 mm x 8 mm` 平板、`40 x 40 x 2` DC3D8 热传导单元、`24 mm` 等效圆形移动接触温度边界，并通过 ODB 后处理导出 `x_mm,z_mm,temperature_c` CSV；`npm.cmd run convert:temperature` 已生成前端 JSON。前端优先读取 Abaqus 简化温度场，失败时回退演示温度场。该结果使用占位材料和热源参数，不代表真实实验温度。
 
 ## P1：近期做
 
 - 持续维护设计报告：每次完成重要科研、设计、仿真、实验、代码或数据处理任务后，更新 `docs/design_log.md`，必要时新增阶段性设计报告。
 - 继续复核第一版局部打磨温度场演示效果，重点检查固定工具 GLB、直线路径、速度控制、重置、温度色块和 GLB 导入后包围盒拟合是否符合汇报预期。
-- 基于已确定的温度场 CSV/JSON 格式，开始做第一版 `100 x 100 mm` 平板 + `24 mm` 磨头路径的简化热源仿真链路，并用 Abaqus 后处理 CSV 替换当前演示温度场。
+- 基于第一版 Abaqus 简化移动热源链路，继续把占位接触温度边界升级为真实热流功率、摩擦生热比例或热-力接触模型，并补充材料热参数和散热边界依据。
 - 使用真实采集数据或设备导出样例验证 `docs/实验数据字段表.md`，重点核对字段名、单位、采样率、通道映射和时间同步方式。
 - 基于第一版数据字段继续完善详情页：把当前模拟诊断图替换为数据驱动的时域曲线、FFT 频谱、声发射高频能量、主轴负载趋势和 Ra 输入特征摘要。
 - 增加导航切换、模型导入、离线资源检查等测试用例。

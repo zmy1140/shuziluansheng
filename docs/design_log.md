@@ -185,3 +185,34 @@
 - 本轮内容已写入 `docs/design_reports/2026-05-18_阶段性设计报告.md`，报告更新为“局部打磨温度场与数据接口更新版”。
 - `docs/下一步任务清单.md` 已将 P0 调整为第一版简化热源仿真链路：`100 mm x 100 mm` 平板、`24 mm` 磨头路径、输出 `x_mm,z_mm,temperature_c` CSV 并转为前端 JSON。
 - 待确认事项包括材料热参数、热源强度、接触/摩擦热比例、对流/散热边界、真实工件几何和实验测温验证方案。
+
+## 2026-05-26
+
+### 第一版 Abaqus 简化移动热源温度场链路
+
+- 本轮完成 `abaqus_runs/moving_heat_source_plate/`，用于验证 “Abaqus 瞬态热传导 -> ODB 后处理 -> CSV -> 前端 JSON -> 3D 温度色块” 的完整链路。
+- 算例采用 `100 mm x 100 mm x 8 mm` 平板，Abaqus `X-Y` 为板面、`Z` 为厚度；网格为平面 `40 x 40`、厚度方向 `2` 层，单元类型为 `DC3D8`。
+- 移动热源第一版没有使用 Fortran 用户子程序，也没有做真实接触/摩擦生热；它用直径 `24 mm` 的圆形节点集沿 `x=-40 mm` 到 `x=40 mm` 移动，并对接触区域施加占位目标温度边界。
+- 底面简化为 `26 degC` 恒温边界，初始温度为 `26 degC`。材料热参数和接触温度均为链路验证占位值，不代表真实磨抛温度。
+- 后处理脚本读取 ODB 中上表面节点在所有瞬态帧中的最大温度，并重采样为 `40 x 40` 的 `x_mm,z_mm,temperature_c` CSV。导出时前端 `z_mm` 对应 Abaqus 板面 `Y` 坐标。
+- `data/demo/temperature_field.csv` 已由该 Abaqus 后处理脚本写入，`public/simulation/temperature_field.json` 由 `npm.cmd run convert:temperature` 生成。前端现在优先读取该 JSON，失败时回退到 `temperature_demo.json`。
+
+### 设计决策
+
+- 第一版先采用平板而不是曲形管道，是为了降低几何、接触和网格复杂度，优先验证仿真数据能稳定进入前端。
+- 第一版采用移动接触温度边界而不是热流功率，是为了避免在参数未确认时伪造摩擦功率、热分配比例和接触换热；文档和页面均标注为占位参数。
+- 温度场 JSON 的 `source` 统一写为 `Abaqus简化热源温度场`，`note` 明确写入“不代表真实实验温度”，避免后续汇报时误把链路验证写成实验结论。
+- 保留 `public/simulation/temperature_demo.json` 作为前端回退数据，避免 Abaqus 结果文件缺失时总览页温度色块完全不可用。
+
+### 验证记录
+
+- Abaqus 求解命令 `D:\SIMULIA\Commands\abaqus.bat job=moving_heat_source_plate input=moving_heat_source_plate.inp interactive` 已完成，求解器输出 `Abaqus JOB moving_heat_source_plate COMPLETED`。
+- 后处理命令 `D:\SIMULIA\Commands\abaqus.bat python extract_temperature_field.py` 已导出 1600 个温度样本。
+- `npm.cmd run convert:temperature` 已把 CSV 转为前端 JSON；测试覆盖了 JSON 结构、`40 x 40` 网格、`100 mm x 100 mm` 尺寸、中文字段、路径附近温度高于角点，以及前端回退逻辑。
+- 重型 Abaqus 求解产物 `.odb/.dat/.msg/.sta/.prt/.com` 仍由 `.gitignore` 忽略；提交时只保留可复现脚本、输入文件、说明和轻量 CSV/JSON 结果。
+
+### 下一步
+
+- 将占位接触温度边界升级为热流功率或摩擦生热模型，至少补齐热源功率、法向力、摩擦系数、接触面积、热分配比例等参数来源。
+- 补充真实材料热参数、环境换热和工具/工件散热边界。
+- 若后续要接近真实磨抛工况，再升级为热-力接触模型或与实验测温数据对比校准。

@@ -12,7 +12,8 @@ const [
 
 const csvText = readFileSync(inputPath, "utf8");
 const payload = parseTemperatureCsv(csvText, {
-  source: "temperature_field_csv",
+  source: "Abaqus简化热源温度场",
+  note: "占位参数的移动热源瞬态热传导结果，不代表真实实验温度。可来自 Abaqus 后处理 CSV，并用于前端颜色映射链路验证。",
 });
 
 writeFileSync(outputPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");

@@ -1,6 +1,7 @@
 import "./style.css";
 import { createAppShell } from "./app.js";
 import { setupScene } from "./scene.js";
+import { loadTemperatureField } from "./temperature-source.js";
 
 const app = document.querySelector("#app");
 const shell = createAppShell();
@@ -110,18 +111,10 @@ fetch("/paths/line_grinding_path.json")
       "未载入路径文件，当前使用内置直线打磨路径。";
   });
 
-fetch("/simulation/temperature_demo.json")
-  .then((response) => {
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    return response.json();
-  })
-  .then((result) => {
-    applySimulationResult(result);
-    simulationStatus.querySelector("span").textContent =
-      `已载入${result.source ?? "演示温度场"}：${result.valueLabel ?? "温度"}，仅用于前端颜色渲染链路验证。`;
-  })
+loadTemperatureField({
+  applySimulationResult,
+  statusText: simulationStatus.querySelector("span"),
+})
   .catch(() => {
     simulationStatus.querySelector("span").textContent =
       "未载入本地温度场样例，当前颜色先由路径经过位置的演示热量驱动。";
