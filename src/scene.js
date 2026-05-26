@@ -2,7 +2,29 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { mapSimulationSamplesToGrid } from "./simulation.js";
+import { getSimulationGridBounds, mapSimulationSamplesToGrid } from "./simulation.js";
+
+export const LOCAL_GRINDING_SCENE_CONFIG = {
+  sceneUnitsPerMm: 0.03,
+  workpiece: {
+    widthMm: 100,
+    depthMm: 100,
+    heightMm: 8,
+  },
+  tool: {
+    referenceDiameterMm: 24,
+  },
+  temperatureGrid: {
+    columns: 40,
+    rows: 40,
+    cellWidthMm: 2.5,
+    cellDepthMm: 2.5,
+  },
+  markers: {
+    showContactRing: false,
+    directionArrowLengthMm: 6,
+  },
+};
 
 export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -58,11 +80,16 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
   scene.add(glowRing);
 
   const processingGroup = new THREE.Group();
-  processingGroup.name = "processing-demo";
+  processingGroup.name = "local-grinding-temperature-demo";
 
-  const plateWidth = 4.4;
-  const plateDepth = 2.8;
-  const plateHeight = 0.24;
+  const sceneUnitsPerMm = LOCAL_GRINDING_SCENE_CONFIG.sceneUnitsPerMm;
+  const plateWidth = LOCAL_GRINDING_SCENE_CONFIG.workpiece.widthMm * sceneUnitsPerMm;
+  const plateDepth = LOCAL_GRINDING_SCENE_CONFIG.workpiece.depthMm * sceneUnitsPerMm;
+  const plateHeight = LOCAL_GRINDING_SCENE_CONFIG.workpiece.heightMm * sceneUnitsPerMm;
+  const toolReferenceDiameter = LOCAL_GRINDING_SCENE_CONFIG.tool.referenceDiameterMm * sceneUnitsPerMm;
+  const toolReferenceRadius = toolReferenceDiameter / 2;
+  const pathWidthMm = LOCAL_GRINDING_SCENE_CONFIG.workpiece.widthMm;
+  const pathDepthMm = LOCAL_GRINDING_SCENE_CONFIG.workpiece.depthMm;
   const plate = new THREE.Mesh(
     new THREE.BoxGeometry(plateWidth, plateHeight, plateDepth),
     new THREE.MeshPhysicalMaterial({
@@ -75,23 +102,24 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
   plate.position.y = -plateHeight / 2;
   processingGroup.add(plate);
 
-  const riskCells = [];
-  const riskValues = [];
-  const simulationRiskValues = [];
-  const riskCellGroup = new THREE.Group();
-  const riskColumns = 26;
-  const riskRows = 16;
-  const riskCellWidth = plateWidth / riskColumns;
-  const riskCellDepth = plateDepth / riskRows;
-  const lowRiskColor = new THREE.Color(0x17324a);
-  const midRiskColor = new THREE.Color(0xf4c65d);
-  const highRiskColor = new THREE.Color(0xff5b35);
-  for (let row = 0; row < riskRows; row += 1) {
-    for (let column = 0; column < riskColumns; column += 1) {
+  const temperatureCells = [];
+  const pathHeatValues = [];
+  const simulationTemperatureValues = [];
+  const temperatureCellGroup = new THREE.Group();
+  const temperatureColumns = LOCAL_GRINDING_SCENE_CONFIG.temperatureGrid.columns;
+  const temperatureRows = LOCAL_GRINDING_SCENE_CONFIG.temperatureGrid.rows;
+  const temperatureCellWidth = plateWidth / temperatureColumns;
+  const temperatureCellDepth = plateDepth / temperatureRows;
+  const lowTemperatureColor = new THREE.Color(0x17324a);
+  const midTemperatureColor = new THREE.Color(0xf4c65d);
+  const highTemperatureColor = new THREE.Color(0xff5b35);
+
+  for (let row = 0; row < temperatureRows; row += 1) {
+    for (let column = 0; column < temperatureColumns; column += 1) {
       const cell = new THREE.Mesh(
-        new THREE.PlaneGeometry(riskCellWidth * 0.86, riskCellDepth * 0.86),
+        new THREE.PlaneGeometry(temperatureCellWidth * 0.86, temperatureCellDepth * 0.86),
         new THREE.MeshBasicMaterial({
-          color: lowRiskColor,
+          color: lowTemperatureColor,
           transparent: true,
           opacity: 0.34,
           side: THREE.DoubleSide,
@@ -99,44 +127,51 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
       );
       cell.rotation.x = -Math.PI / 2;
       cell.position.set(
-        -plateWidth / 2 + riskCellWidth * (column + 0.5),
+        -plateWidth / 2 + temperatureCellWidth * (column + 0.5),
         0.018,
-        -plateDepth / 2 + riskCellDepth * (row + 0.5),
+        -plateDepth / 2 + temperatureCellDepth * (row + 0.5),
       );
-      riskCells.push(cell);
-      riskValues.push(0);
-      simulationRiskValues.push(0);
-      riskCellGroup.add(cell);
+      temperatureCells.push(cell);
+      pathHeatValues.push(0);
+      simulationTemperatureValues.push(0);
+      temperatureCellGroup.add(cell);
     }
   }
-  processingGroup.add(riskCellGroup);
+  processingGroup.add(temperatureCellGroup);
 
-  const spiralPoints = [];
-  const spiralTurns = 4.2;
-  const spiralSteps = 360;
-  for (let index = 0; index < spiralSteps; index += 1) {
-    const ratio = index / (spiralSteps - 1);
-    const angle = ratio * spiralTurns * Math.PI * 2;
-    const radiusX = THREE.MathUtils.lerp(plateWidth * 0.43, plateWidth * 0.08, ratio);
-    const radiusZ = THREE.MathUtils.lerp(plateDepth * 0.43, plateDepth * 0.08, ratio);
-    spiralPoints.push(new THREE.Vector3(Math.cos(angle) * radiusX, 0.045, Math.sin(angle) * radiusZ));
+  function pathPointToScene(point) {
+    return new THREE.Vector3(
+      (Number(point.x) / pathWidthMm) * plateWidth,
+      0,
+      (Number(point.z) / pathDepthMm) * plateDepth,
+    );
   }
 
+  function createDefaultLinePoints() {
+    return [
+      pathPointToScene({ x: -40, z: 0 }),
+      pathPointToScene({ x: 40, z: 0 }),
+    ];
+  }
+
+  let toolPathPoints = createDefaultLinePoints();
+
   const pathLine = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints(spiralPoints),
+    new THREE.BufferGeometry().setFromPoints(toolPathPoints),
     new THREE.LineBasicMaterial({ color: 0x7ee7ff, transparent: true, opacity: 0.72 }),
   );
   processingGroup.add(pathLine);
 
   const trailLine = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([spiralPoints[0], spiralPoints[0].clone()]),
+    new THREE.BufferGeometry().setFromPoints([toolPathPoints[0], toolPathPoints[0].clone()]),
     new THREE.LineBasicMaterial({ color: 0xffcf66, transparent: true, opacity: 0.96 }),
   );
   processingGroup.add(trailLine);
 
   const toolGroup = new THREE.Group();
-  const toolHead = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.17, 0.17, 0.72, 36),
+  const toolModelSlot = new THREE.Group();
+  const fallbackToolHead = new THREE.Mesh(
+    new THREE.CylinderGeometry(toolReferenceRadius, toolReferenceRadius, toolReferenceDiameter, 36),
     new THREE.MeshPhysicalMaterial({
       color: 0xff9c5f,
       roughness: 0.3,
@@ -145,26 +180,17 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
       emissiveIntensity: 0.8,
     }),
   );
-  toolHead.position.y = 0.41;
-  const contactRing = new THREE.Mesh(
-    new THREE.TorusGeometry(0.19, 0.012, 12, 40),
-    new THREE.MeshBasicMaterial({ color: 0xffdf8f }),
-  );
-  contactRing.rotation.x = Math.PI / 2;
-  contactRing.position.y = 0.06;
+  fallbackToolHead.position.y = toolReferenceRadius;
+  toolModelSlot.add(fallbackToolHead);
+
   const directionMarker = new THREE.Mesh(
-    new THREE.ConeGeometry(0.08, 0.26, 18),
+    new THREE.ConeGeometry(0.035, LOCAL_GRINDING_SCENE_CONFIG.markers.directionArrowLengthMm * sceneUnitsPerMm, 14),
     new THREE.MeshBasicMaterial({ color: 0x69f0c7 }),
   );
-  directionMarker.position.y = 0.08;
-  toolGroup.add(toolHead, contactRing, directionMarker);
+  directionMarker.position.y = 0.045;
+  toolGroup.add(toolModelSlot, directionMarker);
   processingGroup.add(toolGroup);
 
-  const spark = new THREE.Mesh(
-    new THREE.SphereGeometry(0.08, 18, 18),
-    new THREE.MeshBasicMaterial({ color: 0x89fff1 }),
-  );
-  processingGroup.add(spark);
   scene.add(processingGroup);
 
   const particlesGeometry = new THREE.BufferGeometry();
@@ -174,10 +200,7 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
     particlePositions[index + 1] = (Math.random() - 0.1) * 5;
     particlePositions[index + 2] = (Math.random() - 0.5) * 8;
   }
-  particlesGeometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(particlePositions, 3),
-  );
+  particlesGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
 
   const particles = new THREE.Points(
     particlesGeometry,
@@ -208,47 +231,50 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
     return loadedModel ?? processingGroup;
   }
 
-  function resetRiskMap() {
-    riskValues.fill(0);
-    updateRiskCellColors();
-    updateToolPose(0);
-  }
-
-  function updateRiskCellColors() {
-    riskCells.forEach((cell, index) => {
-      const value = THREE.MathUtils.clamp(Math.max(riskValues[index], simulationRiskValues[index]), 0, 1);
+  function updateTemperatureCellColors() {
+    temperatureCells.forEach((cell, index) => {
+      const value = THREE.MathUtils.clamp(
+        Math.max(pathHeatValues[index], simulationTemperatureValues[index]),
+        0,
+        1,
+      );
       const color = value < 0.55
-        ? lowRiskColor.clone().lerp(midRiskColor, value / 0.55)
-        : midRiskColor.clone().lerp(highRiskColor, (value - 0.55) / 0.45);
+        ? lowTemperatureColor.clone().lerp(midTemperatureColor, value / 0.55)
+        : midTemperatureColor.clone().lerp(highTemperatureColor, (value - 0.55) / 0.45);
       cell.material.color.copy(color);
       cell.material.opacity = 0.18 + value * 0.58;
     });
   }
 
+  function resetTemperatureMap() {
+    pathHeatValues.fill(0);
+    updateTemperatureCellColors();
+    updateToolPose(0);
+  }
+
   function updateToolPose(progress) {
-    const exactIndex = progress * (spiralPoints.length - 1);
-    const pointIndex = Math.min(Math.floor(exactIndex), spiralPoints.length - 2);
+    const exactIndex = progress * (toolPathPoints.length - 1);
+    const pointIndex = Math.min(Math.floor(exactIndex), toolPathPoints.length - 2);
     const localMix = exactIndex - pointIndex;
-    const point = spiralPoints[pointIndex].clone().lerp(spiralPoints[pointIndex + 1], localMix);
-    const tangent = spiralPoints[pointIndex + 1].clone().sub(spiralPoints[pointIndex]).normalize();
+    const point = toolPathPoints[pointIndex].clone().lerp(toolPathPoints[pointIndex + 1], localMix);
+    const tangent = toolPathPoints[pointIndex + 1].clone().sub(toolPathPoints[pointIndex]).normalize();
 
     toolGroup.position.copy(point);
-    spark.position.set(point.x, point.y + 0.03, point.z);
-    directionMarker.position.set(tangent.x * 0.28, 0.08, tangent.z * 0.28);
+    directionMarker.position.set(tangent.x * 0.18, 0.045, tangent.z * 0.18);
     directionMarker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tangent);
 
-    const trailPoints = spiralPoints.slice(0, pointIndex + 1);
+    const trailPoints = toolPathPoints.slice(0, pointIndex + 1);
     trailPoints.push(point);
     trailLine.geometry.dispose();
     trailLine.geometry = new THREE.BufferGeometry().setFromPoints(trailPoints);
 
-    riskCells.forEach((cell, index) => {
+    temperatureCells.forEach((cell, index) => {
       const distance = Math.hypot(cell.position.x - point.x, cell.position.z - point.z);
-      if (distance < 0.34) {
-        riskValues[index] = Math.min(1, riskValues[index] + (0.08 * (1 - distance / 0.34)));
+      if (distance < toolReferenceRadius) {
+        pathHeatValues[index] = Math.min(1, pathHeatValues[index] + (0.08 * (1 - distance / toolReferenceRadius)));
       }
     });
-    updateRiskCellColors();
+    updateTemperatureCellColors();
   }
 
   function fitProcessingDemoToObject(object = null) {
@@ -273,11 +299,38 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
     const bounds = new THREE.Box3().setFromObject(object);
     const size = bounds.getSize(new THREE.Vector3());
     const center = bounds.getCenter(new THREE.Vector3());
-
     object.position.sub(center);
-
     const maxSize = Math.max(size.x, size.y, size.z) || 1;
     object.scale.setScalar(3 / maxSize);
+  }
+
+  function normalizeToolModel(object) {
+    const bounds = new THREE.Box3().setFromObject(object);
+    const size = bounds.getSize(new THREE.Vector3());
+    const center = bounds.getCenter(new THREE.Vector3());
+    object.position.sub(center);
+    const maxSize = Math.max(size.x, size.y, size.z) || 1;
+    object.scale.setScalar(toolReferenceDiameter / maxSize);
+    object.updateWorldMatrix(true, true);
+    const normalizedBounds = new THREE.Box3().setFromObject(object);
+    object.position.y -= normalizedBounds.min.y;
+  }
+
+  function applyToolPathPayload(pathPayload) {
+    const points = Array.isArray(pathPayload?.points)
+      ? pathPayload.points.map(pathPointToScene)
+      : [];
+
+    if (points.length < 2) {
+      return false;
+    }
+
+    toolPathPoints = points;
+    pathLine.geometry.dispose();
+    pathLine.geometry = new THREE.BufferGeometry().setFromPoints(toolPathPoints);
+    processingProgress = 0;
+    resetTemperatureMap();
+    return true;
   }
 
   function fitObjectToView(object, showStatus = true) {
@@ -339,13 +392,12 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
     const delta = clock.getDelta();
     const nextProgress = processingProgress + delta * 0.055 * processingSpeed;
     if (nextProgress >= 1) {
-      riskValues.fill(0);
+      pathHeatValues.fill(0);
     }
     processingProgress = nextProgress % 1;
     updateToolPose(processingProgress);
     particles.rotation.y -= 0.0015;
     glowRing.rotation.z += 0.0025;
-    spark.scale.setScalar(1 + Math.sin(performance.now() * 0.004) * 0.18);
     controls.update();
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
@@ -377,7 +429,7 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
           normalizeModel(loadedModel);
           scene.add(loadedModel);
           fitProcessingDemoToObject(loadedModel);
-          resetRiskMap();
+          resetTemperatureMap();
           fitActiveObjectToView();
           URL.revokeObjectURL(objectUrl);
         },
@@ -387,10 +439,39 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
             error?.message ||
             error?.target?.statusText ||
             "当前模型未能完成解析，请检查压缩格式或导出设置。";
-          setStatus(`模型载入失败：${file.name}（${message}）`, { persist: true });
+          setStatus(`模型载入失败：${file.name}，${message}`, { persist: true });
           URL.revokeObjectURL(objectUrl);
         },
       );
+    },
+    loadDefaultToolModel(url = "/models/tool.glb") {
+      loader.load(
+        url,
+        (gltf) => {
+          toolModelSlot.clear();
+          const toolModel = gltf.scene;
+          toolModel.traverse((node) => {
+            if (node.isMesh) {
+              node.castShadow = false;
+              node.receiveShadow = false;
+            }
+          });
+          normalizeToolModel(toolModel);
+          toolModelSlot.add(toolModel);
+          setStatus("已加载固定工具模型：tool.glb");
+        },
+        undefined,
+        () => {
+          toolModelSlot.clear();
+          toolModelSlot.add(fallbackToolHead);
+          setStatus("固定工具模型未能加载，当前使用圆柱占位工具。");
+        },
+      );
+    },
+    applyToolPath(pathPayload) {
+      if (applyToolPathPayload(pathPayload)) {
+        setStatus(`已加载打磨路径：${pathPayload?.id ?? "line_grinding_demo"}`);
+      }
     },
     fitActiveObjectToView,
     setProcessingSpeed(value) {
@@ -398,24 +479,30 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
     },
     applySimulationResult(result) {
       const samples = result?.samples ?? [];
-      const valueKey = result?.valueKey ?? "mises";
-      const mappedValues = mapSimulationSamplesToGrid(samples, {
-        columns: riskColumns,
-        rows: riskRows,
+      const valueKey = result?.valueKey ?? "temperature_c";
+      const { width, depth } = getSimulationGridBounds(result, {
         width: plateWidth,
         depth: plateDepth,
+      });
+      const mappedValues = mapSimulationSamplesToGrid(samples, {
+        columns: temperatureColumns,
+        rows: temperatureRows,
+        width,
+        depth,
         valueKey,
+        xKey: result?.xKey ?? "x",
+        zKey: result?.zKey ?? "z",
       });
       mappedValues.forEach((value, index) => {
-        simulationRiskValues[index] = value;
+        simulationTemperatureValues[index] = value;
       });
-      updateRiskCellColors();
-      setStatus("已载入简化厚板仿真结果：颜色映射为原型演示");
+      updateTemperatureCellColors();
+      setStatus("已加载演示温度场：颜色映射仅用于前端链路验证");
     },
     resetProcessingDemo() {
       processingProgress = 0;
-      resetRiskMap();
-      setStatus("加工演示已重置：螺旋轨迹回到外圈起点");
+      resetTemperatureMap();
+      setStatus("局部打磨演示已重置：工具回到直线路径起点");
     },
   };
 }

@@ -12,6 +12,9 @@
 - 支持导入 `.glb` / `.gltf` 模型。
 - 支持 Draco 压缩模型解码，解码器位于 `public/draco/`。
 - 导入模型后自动归一化，并提供“自动居中”按钮。
+- 工况总览包含局部打磨温度场演示：固定工具模型沿一条直线路径运动，工件平板/展开面按演示温度场 JSON 着色。
+- 支持将路径 CSV 转换为前端读取的路径 JSON，便于后续接同门路径规划结果。
+- 支持将温度场 CSV 转换为前端读取的温度场 JSON，便于后续接 Abaqus 后处理或实验测温结果。
 - 使用模拟数据刷新力、振动、声发射、主轴转速和粗糙度展示值。
 
 ## 运行环境
@@ -52,6 +55,22 @@ npm.cmd run build
 
 构建时如果出现 Three.js chunk size 警告，当前阶段可以接受；只要命令退出成功，就表示构建通过。
 
+转换演示路径 CSV：
+
+```powershell
+npm.cmd run convert:path
+```
+
+默认会读取 `data/demo/line_grinding_path.csv`，生成 `public/paths/line_grinding_path.json`。
+
+转换温度场 CSV：
+
+```powershell
+npm.cmd run convert:temperature
+```
+
+默认会读取 `data/demo/temperature_field.csv`，生成 `public/simulation/temperature_field.json`。格式说明见 `docs/temperature-field-format.md`。
+
 ## 导入 3D 模型
 
 1. 启动本地开发服务器。
@@ -75,13 +94,22 @@ npm.cmd run build
 - `src/app.js`：页面结构、导航、监测模块和主要文案。
 - `src/main.js`：启动逻辑、页面切换、模型状态提示和模拟数据刷新。
 - `src/scene.js`：Three.js 场景、GLB/GLTF 导入、Draco 解码和自动居中。
+- `src/path.js`：路径 CSV 解析为前端路径 JSON 的基础逻辑。
+- `src/temperature.js`：温度场 CSV 解析为前端温度场 JSON 的基础逻辑。
+- `src/simulation.js`：仿真/温度场样本映射到前端网格色块的基础逻辑。
 - `src/style.css`：界面样式。
 - `src/app.test.js`：Vitest + jsdom 基础结构测试。
 - `public/draco/`：Draco 解码器文件。
+- `public/models/`：固定演示模型资源，例如 `tool.glb`。
+- `public/paths/`：前端读取的路径 JSON。
+- `public/simulation/`：前端读取的仿真或演示场量 JSON。
+- `data/demo/`：演示 CSV 数据源。
+- `scripts/`：本地数据转换/生成脚本。
+- `docs/temperature-field-format.md`：温度场 CSV/JSON 格式约定。
 - `docs/context.md`：长期上下文交接文档。
 - `docs/todo.md`：后续任务清单。
 - `AGENTS.md`：Codex 项目规则和禁止事项。
 
 ## 后续方向
 
-近期优先级是确认中文编码显示、建立版本保护、定义第一版实验数据字段，并逐步加入本地 CSV/JSON 数据回放能力，让界面从随机模拟过渡到实验数据驱动。
+近期优先级是继续确认真实采集链路、真实仿真参数和粗糙度标签，并把当前演示路径/演示温度场 JSON 逐步替换为同门路径规划输出和 Abaqus 后处理结果。

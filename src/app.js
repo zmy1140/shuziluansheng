@@ -284,7 +284,7 @@ export function createAppShell() {
               ${metricCard("切削力", "data-force-value", "128", "N", "法向接触稳定", "data-force-detail", "Fx 46 N / Fy 31 N / Fz 108 N")}
               ${metricCard("振动RMS", "data-vibration-value", "0.42", "g", "低频响应可控", "data-vibration-detail", "峰值 0.71 g / 主频 116 Hz")}
               ${metricCard("声发射", "data-ae-value", "31", "dB", "高频特征占位", "data-ae-detail", "能量 0.86 V²·s / 计数 248")}
-              ${metricCard("粗糙度预测", "data-roughness-value", "Ra 1.62", "μm", "演示模型输出", "data-roughness-detail", "输入：力 / 振动 / 声发射 / 主轴")}
+              ${metricCard("粗糙度预测", "data-roughness-value", "Ra 1.62", "μm", "本地模拟，模型未接入", "data-roughness-detail", "输入占位：力 / 振动 / 声发射 / 主轴")}
             </section>
 
             <section class="overview-main">
@@ -303,8 +303,8 @@ export function createAppShell() {
                 </div>
                 <div class="processing-demo-panel">
                   <div>
-                    <strong>3D加工过程演示</strong>
-                    <p>圆柱磨头沿厚板表面执行螺旋向内收缩轨迹，颜色表示模拟粗糙度风险，不代表真实Ra预测或真实仿真结果。</p>
+                    <strong>局部打磨温度场演示</strong>
+                    <p>固定工具模型沿平板/展开面执行一条直线打磨路径，网格颜色表示演示温度场，不代表真实打磨温度或真实Abaqus结果。</p>
                   </div>
                   <label>
                     速度
@@ -318,29 +318,12 @@ export function createAppShell() {
                   <button class="tool-button" type="button" data-processing-reset>重置</button>
                 </div>
                 <div class="simulation-status" data-simulation-status>
-                  <strong>仿真结果颜色映射原型</strong>
-                  <span>待接入简化厚板算例：Mises应力/位移幅值。当前颜色先由模拟风险驱动。</span>
+                  <strong>温度场颜色映射原型</strong>
+                  <span>当前载入演示温度场 JSON。后期 Abaqus 热仿真完成后，可导出同格式温度 JSON 直接替换。</span>
                 </div>
               </div>
               <div class="monitor-card status-summary">
                 <div class="overview-side-stack">
-                  <section class="side-panel prediction-panel">
-                    <div class="section-title">
-                      <h3>预测状态</h3>
-                      <span>DEMO</span>
-                    </div>
-                    <div class="roughness-box">
-                      <strong data-roughness-large>Ra 1.62</strong>
-                      <span>μm</span>
-                    </div>
-                    <p>当前为本地模拟数据，后续接入真实力、振动、声发射与粗糙度标签。</p>
-                    <div class="status-list">
-                      <div><span>模型输入</span><strong>4类信号</strong></div>
-                      <div><span>结果状态</span><strong>可展示</strong></div>
-                      <div><span>后端接口</span><strong>未接入</strong></div>
-                    </div>
-                  </section>
-
                   ${multiSignalTrendPanel()}
                 </div>
               </div>

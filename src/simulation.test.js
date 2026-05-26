@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { mapSimulationSamplesToGrid } from "./simulation.js";
+import { getSimulationGridBounds, mapSimulationSamplesToGrid } from "./simulation.js";
 
 describe("mapSimulationSamplesToGrid", () => {
   test("maps plate simulation scalar samples into a normalized color grid", () => {
@@ -20,6 +20,30 @@ describe("mapSimulationSamplesToGrid", () => {
     expect(grid[14]).toBeCloseTo(1);
   });
 
+  test("maps temperature samples with millimeter coordinate fields", () => {
+    const grid = mapSimulationSamplesToGrid(
+      [
+        { x_mm: -2, z_mm: -1, temperature_c: 28 },
+        { x_mm: 0, z_mm: 0, temperature_c: 68 },
+        { x_mm: 2, z_mm: 1, temperature_c: 88 },
+      ],
+      {
+        columns: 5,
+        rows: 3,
+        width: 4,
+        depth: 2,
+        valueKey: "temperature_c",
+        xKey: "x_mm",
+        zKey: "z_mm",
+      },
+    );
+
+    expect(grid).toHaveLength(15);
+    expect(grid[0]).toBeCloseTo(0);
+    expect(grid[7]).toBeCloseTo(2 / 3);
+    expect(grid[14]).toBeCloseTo(1);
+  });
+
   test("returns an empty grid when simulation samples are unavailable", () => {
     const grid = mapSimulationSamplesToGrid([], {
       columns: 4,
@@ -32,18 +56,50 @@ describe("mapSimulationSamplesToGrid", () => {
     expect(grid).toEqual(new Array(8).fill(0));
   });
 
-  test("keeps the bundled Abaqus plate mapping sample usable by the frontend", () => {
-    const result = JSON.parse(readFileSync("public/simulation/plate_color_mapping.json", "utf8"));
+  test("keeps the bundled temperature demo sample usable by the frontend", () => {
+    const result = JSON.parse(readFileSync("public/simulation/temperature_demo.json", "utf8"));
     const grid = mapSimulationSamplesToGrid(result.samples, {
-      columns: 26,
-      rows: 16,
-      width: 4.4,
-      depth: 2.8,
+      columns: result.grid.columns,
+      rows: result.grid.rows,
+      width: result.grid.widthMm,
+      depth: result.grid.depthMm,
       valueKey: result.valueKey,
+      xKey: result.xKey,
+      zKey: result.zKey,
     });
 
-    expect(result.note).toContain("不代表真实磨抛接触仿真或真实粗糙度预测");
+    expect(result.valueKey).toBe("temperature_c");
+    expect(result.note).toContain("演示温度场");
+    expect(result.grid).toMatchObject({
+      columns: 40,
+      rows: 40,
+      widthMm: 100,
+      depthMm: 100,
+    });
     expect(result.samples.length).toBeGreaterThan(0);
     expect(Math.max(...grid)).toBe(1);
+    expect(grid[0]).toBeLessThan(0.08);
+    expect(grid[result.grid.columns - 1]).toBeLessThan(0.08);
+    expect(grid[(result.grid.rows - 1) * result.grid.columns]).toBeLessThan(0.08);
+    expect(grid[result.grid.rows * result.grid.columns - 1]).toBeLessThan(0.08);
+  });
+
+  test("uses millimeter grid bounds for millimeter simulation coordinates", () => {
+    const bounds = getSimulationGridBounds({
+      xKey: "x_mm",
+      zKey: "z_mm",
+      grid: {
+        widthMm: 100,
+        depthMm: 100,
+      },
+    }, {
+      width: 3,
+      depth: 3,
+    });
+
+    expect(bounds).toEqual({
+      width: 100,
+      depth: 100,
+    });
   });
 });

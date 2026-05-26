@@ -1,0 +1,30 @@
+{
+  "id": "line_grinding_demo",
+  "unit": "mm",
+  "timeUnit": "s",
+  "coordinate": "workpiece_local",
+  "toolRadiusMm": 4,
+  "sourceFormat": "csv",
+  "points": [
+    {
+      "t": 0,
+      "x": -40,
+      "y": 5,
+      "z": 0,
+      "nx": 0,
+      "ny": -1,
+      "nz": 0,
+      "feedMmS": 5
+    },
+    {
+      "t": 8,
+      "x": 40,
+      "y": 5,
+      "z": 0,
+      "nx": 0,
+      "ny": -1,
+      "nz": 0,
+      "feedMmS": 5
+    }
+  ]
+}

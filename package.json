@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "convert:path": "node scripts/convert-path-csv.js",
+    "convert:temperature": "node scripts/convert-temperature-csv.js"
   },
   "dependencies": {
     "three": "^0.179.1"

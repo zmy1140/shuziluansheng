@@ -2,12 +2,26 @@ function clampIndex(value, maxIndex) {
   return Math.max(0, Math.min(maxIndex, value));
 }
 
+export function getSimulationGridBounds(result, fallback) {
+  const usesMillimeterCoordinates = result?.xKey?.endsWith("_mm") || result?.zKey?.endsWith("_mm");
+  if (usesMillimeterCoordinates) {
+    return {
+      width: Number(result?.grid?.widthMm) || fallback.width,
+      depth: Number(result?.grid?.depthMm) || fallback.depth,
+    };
+  }
+
+  return fallback;
+}
+
 export function mapSimulationSamplesToGrid(samples, {
   columns,
   rows,
   width,
   depth,
   valueKey = "value",
+  xKey = "x",
+  zKey = "z",
 }) {
   const grid = new Array(columns * rows).fill(0);
   if (!Array.isArray(samples) || samples.length === 0) {
@@ -26,8 +40,8 @@ export function mapSimulationSamplesToGrid(samples, {
   const range = maxValue - minValue || 1;
 
   samples.forEach((sample) => {
-    const x = Number(sample.x);
-    const z = Number(sample.z);
+    const x = Number(sample[xKey]);
+    const z = Number(sample[zKey]);
     const rawValue = Number(sample[valueKey]);
     if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(rawValue)) {
       return;

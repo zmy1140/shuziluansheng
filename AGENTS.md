@@ -32,6 +32,12 @@
 - `src/style.css`：本地工控监测风格界面样式。
 - `src/app.test.js`：Vitest + jsdom 基础结构测试。
 - `public/draco/`：Draco 解码器文件，GLB 压缩模型加载依赖此目录。
+- `public/models/`：固定演示模型资源，例如局部打磨工具 `tool.glb`。
+- `public/paths/`：前端读取的路径 JSON，例如直线打磨路径。
+- `public/simulation/`：前端读取的仿真或演示场量 JSON，例如温度场演示数据。
+- `data/demo/`：演示用 CSV 数据源，例如同门路径规划可导出的路径 CSV 样例。
+- `scripts/`：本地数据转换/生成脚本，例如路径 CSV 转 JSON。
+- `docs/temperature-field-format.md`：温度场 CSV/JSON 格式约定，供 Abaqus 后处理或实验测温数据整理时参考。
 - `dist/`：构建产物，不作为源码手动维护。
 - `node_modules/`：依赖目录，不手动编辑。
 - `docs/context.md`：长期上下文交接文档，新对话优先阅读。
@@ -47,6 +53,8 @@ npm.cmd install
 npm.cmd run dev -- --host 127.0.0.1
 npm.cmd test
 npm.cmd run build
+npm.cmd run convert:path
+npm.cmd run convert:temperature
 npm.cmd run preview
 ```
 
@@ -56,6 +64,8 @@ npm.cmd run preview
 - 开发预览通常访问 `http://127.0.0.1:5173/`。
 - `npm.cmd test` 用于运行基础前端结构测试。
 - `npm.cmd run build` 用于确认生产构建是否通过。
+- `npm.cmd run convert:path` 用于将 `data/demo/line_grinding_path.csv` 转换为 `public/paths/line_grinding_path.json`。
+- `npm.cmd run convert:temperature` 用于将 `data/demo/temperature_field.csv` 转换为 `public/simulation/temperature_field.json`。
 - Three.js 体积较大，构建时出现 chunk size 警告是当前可接受现象，不等于构建失败。
 
 ## 当前可运行状态
@@ -65,6 +75,7 @@ npm.cmd run preview
 - 运行开发预览后，应能看到本地工控监测风格界面。
 - 左侧导航应能切换：工况总览、切削力、振动分析、声发射、主轴状态、粗糙度预测。
 - 工况总览中应保留 3D 模型视窗、GLB 导入按钮和自动居中功能。
+- 工况总览当前包含局部打磨温度场演示：固定工具模型、直线路径、平板/展开面温度网格；该温度场是演示数据，不代表真实 Abaqus 或实验结果。
 - 页面中的数据当前是模拟值，不代表真实实验数据。
 
 ## 编码与修改规则
@@ -116,3 +127,4 @@ Remove-Item "C:\path\to\file.txt"
 - 如果项目规则、命令、结构发生变化，更新 `AGENTS.md`。
 
 结束回复中要简要说明：改了哪些文件、验证了什么、还有什么风险或下一步。
+如果任务涉及前端页面或演示效果，结束回复中必须提供本地预览地址：`http://127.0.0.1:5173/`。

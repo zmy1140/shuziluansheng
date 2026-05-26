@@ -38,26 +38,37 @@ describe("createAppShell", () => {
     expect(trend.textContent).toContain("Ra预测");
   });
 
-  test("renders processing demo controls and roughness risk explanation", () => {
+  test("keeps roughness access status in the metric card instead of a duplicate side panel", () => {
+    const shell = createAppShell();
+    const overview = shell.querySelector("[data-view-panel='overview']");
+    const roughnessMetric = overview.querySelector("[data-roughness-value]").closest(".metric-card");
+
+    expect(overview.querySelector(".prediction-panel")).toBeNull();
+    expect(overview.textContent).not.toContain("预测状态");
+    expect(roughnessMetric.textContent).toContain("本地模拟");
+    expect(roughnessMetric.textContent).toContain("模型未接入");
+  });
+
+  test("renders processing demo controls and temperature field explanation", () => {
     const shell = createAppShell();
     const overview = shell.querySelector("[data-view-panel='overview']");
 
     expect(overview.querySelector("[data-processing-speed]")).not.toBeNull();
     expect(overview.querySelector("[data-processing-reset]")).not.toBeNull();
-    expect(overview.textContent).toContain("3D加工过程演示");
-    expect(overview.textContent).toContain("螺旋向内收缩轨迹");
-    expect(overview.textContent).toContain("模拟粗糙度风险");
-    expect(overview.textContent).toContain("不代表真实Ra预测或真实仿真结果");
+    expect(overview.textContent).toContain("局部打磨温度场演示");
+    expect(overview.textContent).toContain("一条直线打磨路径");
+    expect(overview.textContent).toContain("演示温度场");
+    expect(overview.textContent).toContain("不代表真实打磨温度或真实Abaqus结果");
   });
 
-  test("renders Abaqus color mapping prototype status as non-real-process evidence", () => {
+  test("renders temperature color mapping prototype status as replaceable demo data", () => {
     const shell = createAppShell();
     const overview = shell.querySelector("[data-view-panel='overview']");
 
     expect(overview.querySelector("[data-simulation-status]")).not.toBeNull();
-    expect(overview.textContent).toContain("仿真结果颜色映射原型");
-    expect(overview.textContent).toContain("Mises应力/位移幅值");
-    expect(overview.textContent).toContain("简化厚板算例");
+    expect(overview.textContent).toContain("温度场颜色映射原型");
+    expect(overview.textContent).toContain("演示温度场 JSON");
+    expect(overview.textContent).toContain("同格式温度 JSON 直接替换");
   });
 
   test("uses signal-specific legend color selectors", () => {

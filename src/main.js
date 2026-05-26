@@ -34,6 +34,8 @@ function showModelStatus(message, { persist = false } = {}) {
 
 const {
   loadLocalModel,
+  loadDefaultToolModel,
+  applyToolPath,
   fitActiveObjectToView,
   setProcessingSpeed,
   resetProcessingDemo,
@@ -43,6 +45,8 @@ const {
   modelStatus,
   showModelStatus,
 );
+
+loadDefaultToolModel();
 
 function setActiveView(view) {
   viewTargets.forEach((button) => {
@@ -91,7 +95,22 @@ processingReset.addEventListener("click", () => {
   resetProcessingDemo();
 });
 
-fetch("/simulation/plate_color_mapping.json")
+fetch("/paths/line_grinding_path.json")
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
+  })
+  .then((pathPayload) => {
+    applyToolPath(pathPayload);
+  })
+  .catch(() => {
+    simulationStatus.querySelector("span").textContent =
+      "未载入路径文件，当前使用内置直线打磨路径。";
+  });
+
+fetch("/simulation/temperature_demo.json")
   .then((response) => {
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -101,11 +120,11 @@ fetch("/simulation/plate_color_mapping.json")
   .then((result) => {
     applySimulationResult(result);
     simulationStatus.querySelector("span").textContent =
-      `已载入${result.source ?? "简化厚板算例"}：${result.valueLabel ?? "Mises应力/位移幅值"}，仅用于颜色映射原型。`;
+      `已载入${result.source ?? "演示温度场"}：${result.valueLabel ?? "温度"}，仅用于前端颜色渲染链路验证。`;
   })
   .catch(() => {
     simulationStatus.querySelector("span").textContent =
-      "未载入本地仿真样例，当前颜色先由模拟粗糙度风险驱动。";
+      "未载入本地温度场样例，当前颜色先由路径经过位置的演示热量驱动。";
   });
 
 const metricNodes = {
@@ -153,7 +172,9 @@ setInterval(() => {
 
   const roughnessText = `Ra ${roughness.toFixed(2)}`;
   metricNodes.roughness.textContent = roughnessText;
-  metricNodes.roughnessLarge.textContent = roughnessText;
+  if (metricNodes.roughnessLarge) {
+    metricNodes.roughnessLarge.textContent = roughnessText;
+  }
   metricNodes.roughnessDetailValue.textContent = roughnessText;
 
   const minutes = Math.floor(runtimeSeconds / 60);
