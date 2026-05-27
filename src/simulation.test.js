@@ -1,6 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { getSimulationGridBounds, mapSimulationSamplesToGrid } from "./simulation.js";
+import {
+  clearTemperatureValues,
+  getSimulationGridBounds,
+  mapSimulationSamplesToGrid,
+  mergeVisibleTemperatureValues,
+  revealTemperatureValuesNearPoint,
+} from "./simulation.js";
 
 describe("mapSimulationSamplesToGrid", () => {
   test("maps plate simulation scalar samples into a normalized color grid", () => {
@@ -135,5 +141,42 @@ describe("mapSimulationSamplesToGrid", () => {
       width: 100,
       depth: 100,
     });
+  });
+});
+
+describe("progressive temperature reveal", () => {
+  test("keeps loaded target temperatures hidden until cells are revealed", () => {
+    const pathHeatValues = [0, 0.25, 0];
+    const revealedTemperatureValues = [0, 0, 0];
+
+    expect(mergeVisibleTemperatureValues(pathHeatValues, revealedTemperatureValues)).toEqual([0, 0.25, 0]);
+  });
+
+  test("reveals only cells inside the current tool contact radius", () => {
+    const targetTemperatureValues = [0.2, 0.7, 1];
+    const revealedTemperatureValues = [0, 0, 0];
+    const cellCenters = [
+      { x: 0, z: 0 },
+      { x: 1.5, z: 0 },
+      { x: 4, z: 0 },
+    ];
+
+    revealTemperatureValuesNearPoint({
+      targetTemperatureValues,
+      revealedTemperatureValues,
+      cellCenters,
+      point: { x: 0, z: 0 },
+      radius: 2,
+    });
+
+    expect(revealedTemperatureValues).toEqual([0.2, 0.7, 0]);
+  });
+
+  test("clears revealed values before replaying the next processing loop", () => {
+    const values = [0.2, 0.7, 1];
+
+    clearTemperatureValues(values);
+
+    expect(values).toEqual([0, 0, 0]);
   });
 });

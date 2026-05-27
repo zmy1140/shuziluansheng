@@ -62,3 +62,42 @@ export function mapSimulationSamplesToGrid(samples, {
 
   return grid;
 }
+
+export function mergeVisibleTemperatureValues(pathHeatValues, revealedTemperatureValues) {
+  const length = Math.max(pathHeatValues?.length ?? 0, revealedTemperatureValues?.length ?? 0);
+  return Array.from({ length }, (_value, index) => Math.max(
+    Number(pathHeatValues?.[index]) || 0,
+    Number(revealedTemperatureValues?.[index]) || 0,
+  ));
+}
+
+export function revealTemperatureValuesNearPoint({
+  targetTemperatureValues,
+  revealedTemperatureValues,
+  cellCenters,
+  point,
+  radius,
+}) {
+  if (!Array.isArray(targetTemperatureValues) || !Array.isArray(revealedTemperatureValues)) {
+    return;
+  }
+  if (!Array.isArray(cellCenters) || !point || !Number.isFinite(radius) || radius <= 0) {
+    return;
+  }
+
+  cellCenters.forEach((cell, index) => {
+    const distance = Math.hypot(Number(cell.x) - Number(point.x), Number(cell.z) - Number(point.z));
+    if (Number.isFinite(distance) && distance <= radius) {
+      revealedTemperatureValues[index] = Math.max(
+        Number(revealedTemperatureValues[index]) || 0,
+        Number(targetTemperatureValues[index]) || 0,
+      );
+    }
+  });
+}
+
+export function clearTemperatureValues(values) {
+  if (Array.isArray(values)) {
+    values.fill(0);
+  }
+}

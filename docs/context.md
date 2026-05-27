@@ -295,3 +295,5 @@ npm.cmd run preview
 2026-05-26：复核温度场 CSV/JSON 链路的中文显示问题。结论是 `src/temperature.js`、`scripts/generate-temperature-demo.js`、`public/simulation/temperature_field.json` 和 `public/simulation/temperature_demo.json` 实际均为正常 UTF-8 中文；普通 PowerShell `Get-Content` 可能把源码或 JSON 错误解码成“娓╁害”等乱码。已将 `src/temperature.test.js` 的断言改为检查正常中文 `温度`、`温度场 CSV 转换结果` 和 `真实打磨温度`，防止后续真的写入乱码。本次没有修改温度解析业务逻辑。
 
 2026-05-26：完成第一版 Abaqus 简化移动热源温度场链路。新增 `abaqus_runs/moving_heat_source_plate/`，其中 `generate_heat_input.py` 生成 `100 mm x 100 mm x 8 mm` 平板、`40 x 40 x 2` DC3D8 热传导网格和 `24 mm` 等效圆形移动接触温度边界；`extract_temperature_field.py` 从 ODB 导出上表面全过程最大温度到 `x_mm,z_mm,temperature_c` CSV；`README.md` 用新手教学方式说明如何运行、如何打开 Viewer 看云图。已运行 Abaqus/Standard 求解和后处理，导出 1600 个温度样本，并用 `npm.cmd run convert:temperature` 生成 `public/simulation/temperature_field.json`。前端已改为优先读取该 Abaqus 简化温度场，失败时回退 `temperature_demo.json`。本轮明确：热源、材料和散热参数均为占位值，该结果只验证链路，不代表真实实验温度或真实磨抛热分析结论。
+
+2026-05-27：根据浏览器批注修正温度场显示时序。此前前端加载 Abaqus 温度场 JSON 后会立即显示整条温度带，容易造成“刀具还没加工到的位置已经变热”的误解。现已将温度数据拆成后台目标温度场和已经过区域温度场：JSON 加载后只保存目标结果，色块初始保持低亮度；刀具运动到对应接触半径内时，才把该区域按目标温度逐步显色并保留痕迹；动画每循环一遍会清空已显色区域重新演示。当前仍是前端演示时序，不代表真实瞬态冷却或热-力耦合模型。

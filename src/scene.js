@@ -2,7 +2,13 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { getSimulationGridBounds, mapSimulationSamplesToGrid } from "./simulation.js";
+import {
+  clearTemperatureValues,
+  getSimulationGridBounds,
+  mapSimulationSamplesToGrid,
+  mergeVisibleTemperatureValues,
+  revealTemperatureValuesNearPoint,
+} from "./simulation.js";
 
 export const LOCAL_GRINDING_SCENE_CONFIG = {
   sceneUnitsPerMm: 0.03,
@@ -104,7 +110,9 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
 
   const temperatureCells = [];
   const pathHeatValues = [];
-  const simulationTemperatureValues = [];
+  const targetTemperatureValues = [];
+  const revealedTemperatureValues = [];
+  const temperatureCellCenters = [];
   const temperatureCellGroup = new THREE.Group();
   const temperatureColumns = LOCAL_GRINDING_SCENE_CONFIG.temperatureGrid.columns;
   const temperatureRows = LOCAL_GRINDING_SCENE_CONFIG.temperatureGrid.rows;
@@ -132,8 +140,10 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
         -plateDepth / 2 + temperatureCellDepth * (row + 0.5),
       );
       temperatureCells.push(cell);
+      temperatureCellCenters.push({ x: cell.position.x, z: cell.position.z });
       pathHeatValues.push(0);
-      simulationTemperatureValues.push(0);
+      targetTemperatureValues.push(0);
+      revealedTemperatureValues.push(0);
       temperatureCellGroup.add(cell);
     }
   }
@@ -232,12 +242,9 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
   }
 
   function updateTemperatureCellColors() {
+    const visibleValues = mergeVisibleTemperatureValues(pathHeatValues, revealedTemperatureValues);
     temperatureCells.forEach((cell, index) => {
-      const value = THREE.MathUtils.clamp(
-        Math.max(pathHeatValues[index], simulationTemperatureValues[index]),
-        0,
-        1,
-      );
+      const value = THREE.MathUtils.clamp(visibleValues[index] ?? 0, 0, 1);
       const color = value < 0.55
         ? lowTemperatureColor.clone().lerp(midTemperatureColor, value / 0.55)
         : midTemperatureColor.clone().lerp(highTemperatureColor, (value - 0.55) / 0.45);
@@ -247,12 +254,13 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
   }
 
   function resetTemperatureMap() {
-    pathHeatValues.fill(0);
+    clearTemperatureValues(pathHeatValues);
+    clearTemperatureValues(revealedTemperatureValues);
     updateTemperatureCellColors();
-    updateToolPose(0);
+    updateToolPose(0, { revealTemperature: false });
   }
 
-  function updateToolPose(progress) {
+  function updateToolPose(progress, { revealTemperature = true } = {}) {
     const exactIndex = progress * (toolPathPoints.length - 1);
     const pointIndex = Math.min(Math.floor(exactIndex), toolPathPoints.length - 2);
     const localMix = exactIndex - pointIndex;
@@ -268,12 +276,21 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
     trailLine.geometry.dispose();
     trailLine.geometry = new THREE.BufferGeometry().setFromPoints(trailPoints);
 
-    temperatureCells.forEach((cell, index) => {
-      const distance = Math.hypot(cell.position.x - point.x, cell.position.z - point.z);
-      if (distance < toolReferenceRadius) {
-        pathHeatValues[index] = Math.min(1, pathHeatValues[index] + (0.08 * (1 - distance / toolReferenceRadius)));
-      }
-    });
+    if (revealTemperature) {
+      temperatureCells.forEach((cell, index) => {
+        const distance = Math.hypot(cell.position.x - point.x, cell.position.z - point.z);
+        if (distance < toolReferenceRadius) {
+          pathHeatValues[index] = Math.min(1, pathHeatValues[index] + (0.08 * (1 - distance / toolReferenceRadius)));
+        }
+      });
+      revealTemperatureValuesNearPoint({
+        targetTemperatureValues,
+        revealedTemperatureValues,
+        cellCenters: temperatureCellCenters,
+        point,
+        radius: toolReferenceRadius,
+      });
+    }
     updateTemperatureCellColors();
   }
 
@@ -392,7 +409,8 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
     const delta = clock.getDelta();
     const nextProgress = processingProgress + delta * 0.055 * processingSpeed;
     if (nextProgress >= 1) {
-      pathHeatValues.fill(0);
+      clearTemperatureValues(pathHeatValues);
+      clearTemperatureValues(revealedTemperatureValues);
     }
     processingProgress = nextProgress % 1;
     updateToolPose(processingProgress);
@@ -494,10 +512,11 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
         zKey: result?.zKey ?? "z",
       });
       mappedValues.forEach((value, index) => {
-        simulationTemperatureValues[index] = value;
+        targetTemperatureValues[index] = value;
       });
+      clearTemperatureValues(revealedTemperatureValues);
       updateTemperatureCellColors();
-      setStatus("已加载演示温度场：颜色映射仅用于前端链路验证");
+      setStatus("已加载温度场目标结果：颜色将随工具运动逐步显色");
     },
     resetProcessingDemo() {
       processingProgress = 0;
