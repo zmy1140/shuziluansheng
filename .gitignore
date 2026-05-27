@@ -35,6 +35,8 @@ pnpm-debug.log*
 *.sel
 *.res
 *.lck
+*.exception
+abaqus.rpy*
 
 # Editor and OS files
 .vscode/

@@ -46,7 +46,7 @@
 
 ## 常用命令
 
-在项目根目录 `C:\Users\123\Documents\Codex\数字孪生前端` 执行：
+在项目根目录 `C:\Users\123\Documents\Codex\shuziluansheng` 执行：
 
 ```powershell
 npm.cmd install

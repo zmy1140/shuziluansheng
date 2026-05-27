@@ -31,7 +31,7 @@
 在项目根目录打开 PowerShell：
 
 ```powershell
-cd C:\Users\123\Documents\Codex\数字孪生前端
+cd C:\Users\123\Documents\Codex\shuziluansheng
 cd abaqus_runs\moving_heat_source_plate
 python generate_heat_input.py
 & "D:\SIMULIA\Commands\abaqus.bat" job=moving_heat_source_plate input=moving_heat_source_plate.inp interactive

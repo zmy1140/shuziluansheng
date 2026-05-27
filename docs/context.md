@@ -17,7 +17,7 @@
 项目路径：
 
 ```powershell
-C:\Users\123\Documents\Codex\数字孪生前端
+C:\Users\123\Documents\Codex\shuziluansheng
 ```
 
 常用命令：
@@ -236,7 +236,7 @@ npm.cmd run preview
 
 ## 给下一次 Codex 对话的建议开头
 
-继续数字孪生前端项目。请先阅读 `AGENTS.md`、`docs/context.md`、`docs/todo.md`，然后根据 `docs/todo.md` 的 P0 继续。项目路径是 `C:\Users\123\Documents\Codex\数字孪生前端`。本项目要求每次任务完成后更新 `docs/context.md`。
+继续数字孪生前端项目。请先阅读 `AGENTS.md`、`docs/context.md`、`docs/todo.md`，然后根据 `docs/todo.md` 的 P0 继续。项目路径是 `C:\Users\123\Documents\Codex\shuziluansheng`。本项目要求每次任务完成后更新 `docs/context.md`。
 
 ## 2026-05-15 任务理解梳理记录
 
