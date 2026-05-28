@@ -22,6 +22,7 @@ export const LOCAL_GRINDING_SCENE_CONFIG = {
     widthMm: 100,
     depthMm: 100,
     heightMm: 8,
+    surfaceCoverageRatio: 1,
   },
   tool: {
     referenceDiameterMm: 24,
@@ -313,7 +314,10 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
     const bounds = new THREE.Box3().setFromObject(object);
     const size = bounds.getSize(new THREE.Vector3());
     const center = bounds.getCenter(new THREE.Vector3());
-    const scale = Math.max(Math.min(size.x / plateWidth, size.z / plateDepth) * 0.82, 0.38);
+    const scale = Math.max(
+      Math.min(size.x / plateWidth, size.z / plateDepth) * LOCAL_GRINDING_SCENE_CONFIG.workpiece.surfaceCoverageRatio,
+      0.38,
+    );
     processingGroup.position.set(center.x, bounds.max.y + 0.04 * scale, center.z);
     processingGroup.scale.setScalar(scale);
     plate.visible = false;

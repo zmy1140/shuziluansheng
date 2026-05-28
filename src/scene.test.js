@@ -12,6 +12,7 @@ describe("LOCAL_GRINDING_SCENE_CONFIG", () => {
     expect(LOCAL_GRINDING_SCENE_CONFIG.workpiece.widthMm).toBe(100);
     expect(LOCAL_GRINDING_SCENE_CONFIG.workpiece.depthMm).toBe(100);
     expect(LOCAL_GRINDING_SCENE_CONFIG.tool.referenceDiameterMm).toBe(24);
+    expect(LOCAL_GRINDING_SCENE_CONFIG.workpiece.surfaceCoverageRatio).toBe(1);
   });
 
   test("keeps fixed SolidWorks GLB models on the same meter-to-scene scale", () => {
