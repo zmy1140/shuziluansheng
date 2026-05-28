@@ -15,6 +15,9 @@ export const DEFAULT_TOOL_MODEL_URL = "/models/tool.glb";
 
 export const LOCAL_GRINDING_SCENE_CONFIG = {
   sceneUnitsPerMm: 0.03,
+  modelUnits: {
+    solidWorksMetersToSceneUnits: 30,
+  },
   workpiece: {
     widthMm: 100,
     depthMm: 100,
@@ -92,6 +95,7 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
   processingGroup.name = "local-grinding-temperature-demo";
 
   const sceneUnitsPerMm = LOCAL_GRINDING_SCENE_CONFIG.sceneUnitsPerMm;
+  const solidWorksMetersToSceneUnits = LOCAL_GRINDING_SCENE_CONFIG.modelUnits.solidWorksMetersToSceneUnits;
   const plateWidth = LOCAL_GRINDING_SCENE_CONFIG.workpiece.widthMm * sceneUnitsPerMm;
   const plateDepth = LOCAL_GRINDING_SCENE_CONFIG.workpiece.depthMm * sceneUnitsPerMm;
   const plateHeight = LOCAL_GRINDING_SCENE_CONFIG.workpiece.heightMm * sceneUnitsPerMm;
@@ -326,11 +330,9 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
 
   function normalizeToolModel(object) {
     const bounds = new THREE.Box3().setFromObject(object);
-    const size = bounds.getSize(new THREE.Vector3());
     const center = bounds.getCenter(new THREE.Vector3());
     object.position.sub(center);
-    const maxSize = Math.max(size.x, size.y, size.z) || 1;
-    object.scale.setScalar(toolReferenceDiameter / maxSize);
+    object.scale.setScalar(solidWorksMetersToSceneUnits);
     object.updateWorldMatrix(true, true);
     const normalizedBounds = new THREE.Box3().setFromObject(object);
     object.position.y -= normalizedBounds.min.y;

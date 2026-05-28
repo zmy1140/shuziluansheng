@@ -14,6 +14,12 @@ describe("LOCAL_GRINDING_SCENE_CONFIG", () => {
     expect(LOCAL_GRINDING_SCENE_CONFIG.tool.referenceDiameterMm).toBe(24);
   });
 
+  test("keeps fixed SolidWorks GLB models on the same meter-to-scene scale", () => {
+    expect(LOCAL_GRINDING_SCENE_CONFIG.modelUnits.solidWorksMetersToSceneUnits).toBeCloseTo(30);
+    expect(LOCAL_GRINDING_SCENE_CONFIG.modelUnits.solidWorksMetersToSceneUnits)
+      .toBeCloseTo(LOCAL_GRINDING_SCENE_CONFIG.sceneUnitsPerMm * 1000);
+  });
+
   test("uses a finer temperature grid and removes oversized auxiliary markers", () => {
     const { temperatureGrid, markers } = LOCAL_GRINDING_SCENE_CONFIG;
 
