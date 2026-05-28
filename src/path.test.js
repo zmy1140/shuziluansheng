@@ -6,8 +6,8 @@ describe("parsePathCsv", () => {
   test("converts a line grinding CSV into frontend path JSON", () => {
     const csv = [
       "t_s,x_mm,y_mm,z_mm,nx,ny,nz,feed_mm_s",
-      "0,-40,5,0,0,-1,0,5",
-      "8,40,5,0,0,-1,0,5",
+      "0,-40,5,0,0,-1,0,10",
+      "8,40,5,0,0,-1,0,10",
     ].join("\n");
 
     const path = parsePathCsv(csv, {
@@ -25,8 +25,8 @@ describe("parsePathCsv", () => {
       toolRadiusMm: 4,
     });
     expect(path.points).toEqual([
-      { t: 0, x: -40, y: 5, z: 0, nx: 0, ny: -1, nz: 0, feedMmS: 5 },
-      { t: 8, x: 40, y: 5, z: 0, nx: 0, ny: -1, nz: 0, feedMmS: 5 },
+      { t: 0, x: -40, y: 5, z: 0, nx: 0, ny: -1, nz: 0, feedMmS: 10 },
+      { t: 8, x: 40, y: 5, z: 0, nx: 0, ny: -1, nz: 0, feedMmS: 10 },
     ]);
   });
 
@@ -37,5 +37,7 @@ describe("parsePathCsv", () => {
     expect(path.points).toHaveLength(2);
     expect(path.points[0].x).toBeLessThan(path.points[1].x);
     expect(path.points.every((point) => point.ny === -1)).toBe(true);
+    expect(path.points.every((point) => point.feedMmS === 10)).toBe(true);
+    expect(path.points.at(-1).t - path.points[0].t).toBe(8);
   });
 });

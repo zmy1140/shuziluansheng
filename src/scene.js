@@ -13,6 +13,20 @@ import {
 export const DEFAULT_WORKPIECE_MODEL_URL = "/models/workpiece.glb";
 export const DEFAULT_TOOL_MODEL_URL = "/models/tool.glb";
 
+export function getPathDurationSeconds(points, fallbackSeconds = 8) {
+  if (!Array.isArray(points) || points.length < 2) {
+    return fallbackSeconds;
+  }
+
+  const startTime = Number(points[0]?.t);
+  const endTime = Number(points.at(-1)?.t);
+  if (Number.isFinite(startTime) && Number.isFinite(endTime) && endTime > startTime) {
+    return endTime - startTime;
+  }
+
+  return fallbackSeconds;
+}
+
 export const LOCAL_GRINDING_SCENE_CONFIG = {
   sceneUnitsPerMm: 0.03,
   modelUnits: {
@@ -235,6 +249,7 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
   let loadedModel;
   let processingProgress = 0;
   let processingSpeed = 1;
+  let pathDurationSeconds = 8;
   const loader = new GLTFLoader();
   const dracoLoader = new DRACOLoader();
   dracoLoader.setDecoderPath("/draco/");
@@ -352,6 +367,7 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
     }
 
     toolPathPoints = points;
+    pathDurationSeconds = getPathDurationSeconds(pathPayload.points);
     pathLine.geometry.dispose();
     pathLine.geometry = new THREE.BufferGeometry().setFromPoints(toolPathPoints);
     processingProgress = 0;
@@ -416,7 +432,7 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
 
   function animate() {
     const delta = clock.getDelta();
-    const nextProgress = processingProgress + delta * 0.055 * processingSpeed;
+    const nextProgress = processingProgress + (delta * processingSpeed) / pathDurationSeconds;
     if (nextProgress >= 1) {
       clearTemperatureValues(pathHeatValues);
       clearTemperatureValues(revealedTemperatureValues);

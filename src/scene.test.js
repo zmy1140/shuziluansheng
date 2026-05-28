@@ -5,6 +5,7 @@ import {
   DEFAULT_TOOL_MODEL_URL,
   DEFAULT_WORKPIECE_MODEL_URL,
   LOCAL_GRINDING_SCENE_CONFIG,
+  getPathDurationSeconds,
 } from "./scene.js";
 
 describe("LOCAL_GRINDING_SCENE_CONFIG", () => {
@@ -44,5 +45,12 @@ describe("LOCAL_GRINDING_SCENE_CONFIG", () => {
 
     expect(source).toContain("loadDefaultWorkpieceModel()");
     expect(source.indexOf("loadDefaultWorkpieceModel()")).toBeLessThan(source.indexOf("loadDefaultToolModel()"));
+  });
+
+  test("uses the path time span for feed-driven playback duration", () => {
+    expect(getPathDurationSeconds([
+      { t: 0, x: -40, z: 0, feedMmS: 10 },
+      { t: 8, x: 40, z: 0, feedMmS: 10 },
+    ])).toBe(8);
   });
 });

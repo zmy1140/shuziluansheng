@@ -14,7 +14,7 @@
       "nx": 0,
       "ny": -1,
       "nz": 0,
-      "feedMmS": 5
+      "feedMmS": 10
     },
     {
       "t": 8,
@@ -24,7 +24,7 @@
       "nx": 0,
       "ny": -1,
       "nz": 0,
-      "feedMmS": 5
+      "feedMmS": 10
     }
   ]
 }
