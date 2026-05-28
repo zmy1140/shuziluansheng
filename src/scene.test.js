@@ -1,5 +1,11 @@
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { describe, expect, test } from "vitest";
-import { LOCAL_GRINDING_SCENE_CONFIG } from "./scene.js";
+import {
+  DEFAULT_TOOL_MODEL_URL,
+  DEFAULT_WORKPIECE_MODEL_URL,
+  LOCAL_GRINDING_SCENE_CONFIG,
+} from "./scene.js";
 
 describe("LOCAL_GRINDING_SCENE_CONFIG", () => {
   test("uses the requested 100 mm square workpiece and 24 mm tool reference", () => {
@@ -17,5 +23,19 @@ describe("LOCAL_GRINDING_SCENE_CONFIG", () => {
     expect(temperatureGrid.cellDepthMm).toBeLessThanOrEqual(2.5);
     expect(markers.showContactRing).toBe(false);
     expect(markers.directionArrowLengthMm).toBeLessThanOrEqual(6);
+  });
+
+  test("uses separate fixed GLB assets for workpiece and tool", () => {
+    expect(DEFAULT_WORKPIECE_MODEL_URL).toBe("/models/workpiece.glb");
+    expect(DEFAULT_TOOL_MODEL_URL).toBe("/models/tool.glb");
+    expect(DEFAULT_WORKPIECE_MODEL_URL).not.toBe(DEFAULT_TOOL_MODEL_URL);
+    expect(existsSync("public/models/workpiece.glb")).toBe(true);
+  });
+
+  test("starts by loading the fixed workpiece before the fixed tool", async () => {
+    const source = await readFile("src/main.js", "utf8");
+
+    expect(source).toContain("loadDefaultWorkpieceModel()");
+    expect(source.indexOf("loadDefaultWorkpieceModel()")).toBeLessThan(source.indexOf("loadDefaultToolModel()"));
   });
 });

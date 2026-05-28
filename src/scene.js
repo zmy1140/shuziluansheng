@@ -10,6 +10,9 @@ import {
   revealTemperatureValuesNearPoint,
 } from "./simulation.js";
 
+export const DEFAULT_WORKPIECE_MODEL_URL = "/models/workpiece.glb";
+export const DEFAULT_TOOL_MODEL_URL = "/models/tool.glb";
+
 export const LOCAL_GRINDING_SCENE_CONFIG = {
   sceneUnitsPerMm: 0.03,
   workpiece: {
@@ -426,6 +429,30 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
   animate();
 
   return {
+    loadDefaultWorkpieceModel(url = DEFAULT_WORKPIECE_MODEL_URL) {
+      loader.load(
+        url,
+        (gltf) => {
+          if (loadedModel) {
+            scene.remove(loadedModel);
+          }
+          loadedModel = gltf.scene;
+          loadedModel.userData.sourceName = "固定工件模型：workpiece.glb";
+          normalizeModel(loadedModel);
+          scene.add(loadedModel);
+          fitProcessingDemoToObject(loadedModel);
+          resetTemperatureMap();
+          fitActiveObjectToView(false);
+          setStatus("已加载固定工件模型：workpiece.glb");
+        },
+        undefined,
+        () => {
+          fitProcessingDemoToObject();
+          resetTemperatureMap();
+          setStatus("未载入固定工件模型，当前使用简化平板回退");
+        },
+      );
+    },
     loadLocalModel(file) {
       const objectUrl = URL.createObjectURL(file);
       loader.load(
@@ -462,7 +489,7 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
         },
       );
     },
-    loadDefaultToolModel(url = "/models/tool.glb") {
+    loadDefaultToolModel(url = DEFAULT_TOOL_MODEL_URL) {
       loader.load(
         url,
         (gltf) => {
@@ -476,7 +503,6 @@ export function setupScene(sceneRoot, statusNode, notifyModelStatus = null) {
           });
           normalizeToolModel(toolModel);
           toolModelSlot.add(toolModel);
-          setStatus("已加载固定工具模型：tool.glb");
         },
         undefined,
         () => {

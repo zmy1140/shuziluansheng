@@ -35,6 +35,7 @@ function showModelStatus(message, { persist = false } = {}) {
 
 const {
   loadLocalModel,
+  loadDefaultWorkpieceModel,
   loadDefaultToolModel,
   applyToolPath,
   fitActiveObjectToView,
@@ -47,6 +48,7 @@ const {
   showModelStatus,
 );
 
+loadDefaultWorkpieceModel();
 loadDefaultToolModel();
 
 function setActiveView(view) {
