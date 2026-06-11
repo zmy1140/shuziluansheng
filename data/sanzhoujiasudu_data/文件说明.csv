@@ -1,0 +1,10 @@
+file_name,sample_rate_hz,unit,channel_meaning,experiment_status,sample_count,duration_s,notes
+0608data01_raw.txt,1600,m/s^2,第1列=X轴;第2列=Y轴;第3列=Z轴,静止/空载,49600,31,YE7602导出的原始txt;无表头
+0608data01_with_header.csv,1600,m/s^2,acc_ch1=X轴;acc_ch2=Y轴;acc_ch3=Z轴,静止/空载,49600,31,在原始txt基础上增加通道表头
+0608data01_xyz.csv,1600,m/s^2,acc_x_m_s2=X轴;acc_y_m_s2=Y轴;acc_z_m_s2=Z轴,静止/空载,49600,31,推荐使用;字段已按真实轴向命名
+0608dataqingqiao01_raw.txt,1600,m/s^2,第1列=X轴;第2列=Y轴;第3列=Z轴,轻敲传感器,25600,16,YE7602导出的原始txt;无表头
+0608dataqingqiao01_with_header.csv,1600,m/s^2,acc_ch1=X轴;acc_ch2=Y轴;acc_ch3=Z轴,轻敲传感器,25600,16,在原始txt基础上增加通道表头
+0608dataqingqiao01_xyz.csv,1600,m/s^2,acc_x_m_s2=X轴;acc_y_m_s2=Y轴;acc_z_m_s2=Z轴,轻敲传感器,25600,16,推荐使用;字段已按真实轴向命名
+0608datahuangdong01_raw.txt,1600,m/s^2,第1列=X轴;第2列=Y轴;第3列=Z轴,手动晃动传感器,24000,15,YE7602导出的原始txt;无表头
+0608datahuangdong01_with_header.csv,1600,m/s^2,acc_ch1=X轴;acc_ch2=Y轴;acc_ch3=Z轴,手动晃动传感器,24000,15,在原始txt基础上增加通道表头
+0608datahuangdong01_xyz.csv,1600,m/s^2,acc_x_m_s2=X轴;acc_y_m_s2=Y轴;acc_z_m_s2=Z轴,手动晃动传感器,24000,15,推荐使用;字段已按真实轴向命名

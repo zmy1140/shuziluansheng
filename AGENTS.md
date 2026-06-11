@@ -55,6 +55,9 @@ npm.cmd test
 npm.cmd run build
 npm.cmd run convert:path
 npm.cmd run convert:temperature
+npm.cmd run convert:acceleration
+npm.cmd run convert:acceleration:file -- "D:\YE6275D\0608data\0608datahuangdong01.txt"
+npm.cmd run convert:force:file -- "D:\iDAS R&D\Data\10sqingya.txt" --sample-rate 200
 npm.cmd run preview
 ```
 
@@ -66,6 +69,9 @@ npm.cmd run preview
 - `npm.cmd run build` 用于确认生产构建是否通过。
 - `npm.cmd run convert:path` 用于将 `data/demo/line_grinding_path.csv` 转换为 `public/paths/line_grinding_path.json`。
 - `npm.cmd run convert:temperature` 用于将 `data/demo/temperature_field.csv` 转换为 `public/simulation/temperature_field.json`。
+- `npm.cmd run convert:acceleration` 用于将项目内三轴加速度 `_xyz.csv` 样例转换为 `public/simulation/acceleration_features.json`。
+- `npm.cmd run convert:acceleration:file -- "D:\path\to\data.txt"` 用于把某个 YE6275D 导出的三列 txt/csv 转为同目录同名 JSON；如果同名 JSON 已存在则复用，不重复生成。
+- `npm.cmd run convert:force:file -- "D:\path\to\idas.txt" --sample-rate 200` 用于把 iDAS R&D 导出的六维力 CH1-CH6 txt/csv 转为同目录同名 JSON；当前六维力样例按 200 Hz 处理。
 - Three.js 体积较大，构建时出现 chunk size 警告是当前可接受现象，不等于构建失败。
 
 ## 当前可运行状态
@@ -82,6 +88,8 @@ npm.cmd run preview
 
 - 默认只做小范围、可验证的修改，避免一次性重构过多文件。
 - 业务代码修改前先阅读 `docs/context.md` 和 `docs/todo.md`。
+- 以后每次准备修改代码前，必须先做 Git 版本管理检查：运行 `git status --short`，确认当前分支、未提交改动和未跟踪文件；不要把本次任务改动混入无关改动。
+- 如果任务涉及业务代码修改且当前不在合适分支，应优先创建或切换到 `codex/` 前缀的任务分支；如果已有大量未提交改动或改动来源不清，先向用户说明状态再继续。
 - 页面应保持本地离线可运行，不引入 CDN、在线字体、在线图标库或外部 API。
 - 不新增后端、数据库、真实 UDP 采集、机器学习模型，除非用户明确要求。
 - 保留并保护 Three.js 的 GLB 导入、Draco 支持和自动居中能力。

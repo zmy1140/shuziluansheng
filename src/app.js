@@ -135,19 +135,214 @@ function focusList(items) {
   `;
 }
 
+const forceScopeChannels = [
+  { id: "ch1", label: "CH1", color: "#ff2d2d", value: "14.992", peak: "1.356", offset: "0.000" },
+  { id: "ch2", label: "CH2", color: "#16d92e", value: "-0.287", peak: "3.379", offset: "0.000" },
+  { id: "ch3", label: "CH3", color: "#2749ff", value: "-3.076", peak: "1.003", offset: "0.000" },
+  { id: "ch4", label: "CH4", color: "#a000a8", value: "-0.038", peak: "0.065", offset: "0.000" },
+  { id: "ch5", label: "CH5", color: "#9a9300", value: "-0.011", peak: "0.052", offset: "0.000" },
+  { id: "ch6", label: "CH6", color: "#0c1f99", value: "-0.163", peak: "0.008", offset: "0.000" },
+];
+
+function forceScopeValue(channelId, t) {
+  const ripple = Math.sin(t * 620) * 0.18 + Math.sin(t * 1040) * 0.08;
+  if (channelId === "ch1") {
+    return 14.8 + Math.sin(t * 10.5) * 1.1 + Math.exp(-t * 12) * Math.sin(t * 58) * 0.55 + ripple;
+  }
+  if (channelId === "ch2") {
+    const earlyDrop = 13.8 / (1 + Math.exp(-(t - 0.15) * 42));
+    const valley = 13.5 * Math.exp(-(((t - 0.67) / 0.13) ** 2));
+    return 13.2 - earlyDrop - valley + Math.sin(t * 32) * 0.45 + ripple * 1.1;
+  }
+  if (channelId === "ch3") {
+    return -3.3 - Math.exp(-(((t - 0.45) / 0.2) ** 2)) * 1.55 + Math.sin(t * 28) * 0.28 + ripple * 0.55;
+  }
+  if (channelId === "ch4") {
+    return -0.04 + Math.sin(t * 38) * 0.12 + ripple * 0.12;
+  }
+  if (channelId === "ch5") {
+    return -0.12 + Math.cos(t * 34) * 0.1 + ripple * 0.1;
+  }
+  return -0.14 + Math.sin(t * 36 + 1.2) * 0.08 + ripple * 0.08;
+}
+
+function forceScopeY(value) {
+  return Math.min(244, Math.max(34, 161 - value * 5.1));
+}
+
+function forceScopePath(channelId) {
+  return Array.from({ length: 150 }, (_, index) => {
+    const t = index / 149;
+    const x = 70 + t * 560;
+    const y = forceScopeY(forceScopeValue(channelId, t));
+    return `${index === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+  }).join(" ");
+}
+
+function forceScopeChart(title, note) {
+  const tooltipRows = forceScopeChannels
+    .map(
+      (channel, index) => `
+        <g data-force-tooltip-channel="${channel.id}" transform="translate(0 ${24 + index * 24})">
+          <rect class="scope-tooltip-swatch scope-tooltip-swatch--${channel.id}" x="0" y="-14" width="46" height="22" rx="2" />
+          <text class="scope-tooltip-label" x="6" y="1">${channel.label}:</text>
+          <text class="scope-tooltip-value" data-force-tooltip-value="${channel.id}" x="54" y="1">${forceScopeValue(channel.id, 0.63).toFixed(2)}</text>
+        </g>
+      `,
+    )
+    .join("");
+
+  return `
+    <section class="monitor-card diagnostic-chart force-scope-card">
+      <div class="section-title">
+        <h3>${title}</h3>
+        <span>诊断图 · <b data-force-scope-window>10 s/div</b></span>
+      </div>
+      <div class="scope-layout">
+        <div class="scope-plot-panel">
+          <div class="scope-toolbar">
+            <strong>显示曲线</strong>
+            <div class="scope-tools" aria-label="曲线缩放操作">
+              <button class="icon-button" type="button" title="放大时间轴" aria-label="放大时间轴" data-force-scope-zoom-in>+</button>
+              <button class="icon-button" type="button" title="缩小时间轴" aria-label="缩小时间轴" data-force-scope-zoom-out>-</button>
+              <button class="icon-button" type="button" title="复位视图" aria-label="复位视图" data-force-scope-reset>↺</button>
+            </div>
+          </div>
+          <svg class="force-scope-svg" data-force-scope-chart viewBox="0 0 720 300" role="img" aria-label="${title}">
+            <defs>
+              <clipPath id="forceScopeClip">
+                <rect x="70" y="26" width="560" height="226" />
+              </clipPath>
+            </defs>
+            <rect class="scope-paper" x="0" y="0" width="720" height="300" rx="4" />
+            <g class="scope-grid">
+              <path d="M70 26H630M70 71H630M70 116H630M70 161H630M70 206H630M70 252H630" />
+              <path d="M70 26V252M182 26V252M294 26V252M406 26V252M518 26V252M630 26V252" />
+            </g>
+            <g class="scope-axis">
+              <path d="M70 252H638" />
+              <path d="M70 252V20" />
+              <text x="22" y="141" transform="rotate(-90 22 141)">ENG</text>
+              <text x="42" y="48">20</text>
+              <text x="42" y="93">10</text>
+              <text x="48" y="165">0</text>
+              <text x="36" y="210">-10</text>
+              <text x="36" y="255">-20</text>
+              <text x="72" y="284">00:00:06.325</text>
+              <text x="294" y="284">00:00:06.825</text>
+              <text x="515" y="284">00:00:07.325</text>
+            </g>
+            <g clip-path="url(#forceScopeClip)">
+              <g data-force-scope-viewport>
+                ${forceScopeChannels
+                  .map(
+                    (channel) =>
+                      `<path class="scope-line scope-line--${channel.id}" data-force-scope-series="${channel.id}" d="${forceScopePath(channel.id)}" />`,
+                  )
+                  .join("")}
+              </g>
+            </g>
+            <g class="scope-hover" data-force-scope-cursor opacity="0" transform="translate(423 0)">
+              <path class="scope-hover-line" d="M0 26V252" />
+              ${forceScopeChannels
+                .map(
+                  (channel) =>
+                    `<circle class="scope-hover-dot scope-hover-dot--${channel.id}" data-force-tooltip-dot="${channel.id}" cx="0" cy="${forceScopeY(forceScopeValue(channel.id, 0.63)).toFixed(1)}" r="4" />`,
+                )
+                .join("")}
+            </g>
+            <g class="scope-hover-tooltip" data-force-scope-tooltip opacity="0" transform="translate(436 46)">
+              <rect class="scope-tooltip-shadow" x="4" y="4" width="112" height="164" rx="3" />
+              <rect class="scope-tooltip-panel" x="0" y="0" width="112" height="164" rx="3" />
+              <text class="scope-tooltip-time" data-force-tooltip-time x="8" y="16">00:00:06.955</text>
+              ${tooltipRows}
+            </g>
+            <rect class="scope-hit-area" data-force-scope-hit-area x="70" y="26" width="560" height="226" />
+          </svg>
+        </div>
+        <aside class="scope-settings-panel">
+          <h4>显示设置</h4>
+          <table class="scope-settings-table">
+            <thead>
+              <tr><th></th><th>颜色</th><th>值</th><th>峰峰值</th><th>偏移</th></tr>
+            </thead>
+            <tbody>
+              ${forceScopeChannels
+                .map(
+                  ({ label, color, value, peak, offset }) => `
+                    <tr>
+                      <td><label><input type="checkbox" checked disabled />${label}</label></td>
+                      <td><span class="scope-swatch" style="background:${color}"></span></td>
+                      <td>${value}</td>
+                      <td>${peak}</td>
+                      <td>${offset}</td>
+                    </tr>
+                  `,
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </aside>
+      </div>
+      <p class="chart-note">${note}</p>
+    </section>
+  `;
+}
+
 function timeDomainChart(title, note, signal = "diagnostic") {
+  if (signal === "force") {
+    return forceScopeChart(title, note);
+  }
+
+  const isVibrationChart = signal === "vibration";
+
   return `
     <section class="monitor-card diagnostic-chart">
       <div class="section-title">
         <h3>${title}</h3>
         <span>诊断图</span>
       </div>
-      <svg class="trend-svg diagnostic-svg" viewBox="0 0 600 180" role="img" aria-label="${title}">
+      <svg class="trend-svg diagnostic-svg" ${isVibrationChart ? "data-vibration-wave-chart" : ""} viewBox="0 0 600 220" role="img" aria-label="${title}">
         <g class="grid-lines">
-          <path d="M0 30H600M0 75H600M0 120H600M0 165H600" />
-          <path d="M80 0V180M200 0V180M320 0V180M440 0V180M560 0V180" />
+          <path d="M70 28H580M70 78H580M70 128H580M70 178H580" />
+          <path d="M70 28V178M197 28V178M325 28V178M452 28V178M580 28V178" />
         </g>
-        <path class="trend-line trend-line--${signal}" data-trend-path data-trend-signal="${signal}" d="M0 110 C90 86 140 126 220 96 S360 82 440 112 540 96 600 78" />
+        <g class="chart-axis">
+          <path d="M70 178H586" />
+          <path d="M70 178V22" />
+          <text x="325" y="214">时间 / s</text>
+          <text x="18" y="112" transform="rotate(-90 18 112)">归一化幅值</text>
+          <text x="66" y="198">0</text>
+          <text x="190" y="198">0.25</text>
+          <text x="318" y="198">0.50</text>
+          <text x="445" y="198">0.75</text>
+          <text x="574" y="198">1</text>
+          <text x="38" y="182">-1</text>
+          <text x="44" y="132">0</text>
+          <text x="42" y="82">0.5</text>
+          <text x="44" y="32">1</text>
+        </g>
+        ${
+          isVibrationChart
+            ? `
+              <g class="axis-wave-lines">
+                <path class="axis-wave axis-wave--x" data-acc-wave-axis="x" d="M70 128 C145 105 197 102 270 126 S410 154 580 126" />
+                <path class="axis-wave axis-wave--y" data-acc-wave-axis="y" d="M70 124 C145 96 197 102 270 128 S410 160 580 130" />
+                <path class="axis-wave axis-wave--z" data-acc-wave-axis="z" d="M70 132 C145 112 197 106 270 124 S410 148 580 122" />
+              </g>
+              <g class="wave-marker" data-acc-wave-marker>
+                <path d="M325 28V178" />
+                <circle cx="325" cy="128" r="5" />
+              </g>
+              <g class="wave-legend">
+                <text x="82" y="22">X轴</text>
+                <text x="134" y="22">Y轴</text>
+                <text x="186" y="22">Z轴</text>
+              </g>
+              <text class="wave-caption" data-acc-wave-caption x="382" y="22">窗口：待载入</text>
+            `
+            : `<path class="trend-line trend-line--${signal}" data-trend-path data-trend-signal="${signal}" d="M70 128 C145 104 195 144 260 114 S400 100 460 130 535 114 580 96" />`
+        }
       </svg>
       <p class="chart-note">${note}</p>
     </section>
@@ -186,6 +381,58 @@ function spectrumChart(title, note) {
   `;
 }
 
+function accelerationReplayPanel() {
+  return `
+    <section class="monitor-card feature-panel acceleration-replay-panel">
+      <div class="section-title">
+        <h3>真实三轴数据回放</h3>
+        <span>YE6275D</span>
+      </div>
+      <label class="replay-selector">
+        <span>回放数据</span>
+        <select data-acceleration-run-select aria-label="选择三轴加速度回放数据" disabled>
+          <option value="">请先导入TXT/CSV</option>
+        </select>
+        <button class="tool-button" type="button" data-acceleration-import-button>导入TXT/CSV</button>
+        <input data-acceleration-file-input type="file" accept=".txt,.csv,text/plain,text/csv" />
+      </label>
+      <p class="chart-note" data-acceleration-import-status>未导入三轴数据。请选择 YE6275D 三列 txt/csv。</p>
+      <p class="chart-note" data-acceleration-source>未导入三轴加速度数据。</p>
+      <div class="detail-table compact-table">
+        ${detailRows([
+          ["回放窗口", '<span data-acceleration-window>待载入</span>'],
+          ["X轴 RMS", '<span data-acc-rms-x>--</span> m/s²'],
+          ["Y轴 RMS", '<span data-acc-rms-y>--</span> m/s²'],
+          ["Z轴 RMS", '<span data-acc-rms-z>--</span> m/s²'],
+          ["合成 RMS", '<span data-acc-vector-rms>--</span> m/s²'],
+          ["峰峰值", '<span data-acc-peak-to-peak>--</span> m/s²'],
+        ])}
+      </div>
+    </section>
+  `;
+}
+
+function forceReplayPanel() {
+  return `
+    <section class="monitor-card feature-panel force-replay-panel">
+      <div class="section-title">
+        <h3>iDAS 六维力数据回放</h3>
+        <span>M8229 / 200 Hz</span>
+      </div>
+      <label class="replay-selector">
+        <span>回放数据</span>
+        <select data-force-run-select aria-label="选择六维力回放数据" disabled>
+          <option value="">请先导入TXT</option>
+        </select>
+        <button class="tool-button" type="button" data-force-import-button>导入TXT</button>
+        <input data-force-file-input type="file" accept=".txt,.csv,text/plain,text/csv" />
+      </label>
+      <p class="chart-note" data-force-import-status>未导入六维力数据。请选择 iDAS 导出的 CH1-CH6 txt。</p>
+      <p class="chart-note" data-force-source>未导入六维力数据。</p>
+    </section>
+  `;
+}
+
 function bandEnergyPanel(rows) {
   return `
     <section class="monitor-card feature-panel">
@@ -209,10 +456,12 @@ function diagnosticDetail({
   rows,
   charts,
   summary,
+  layoutClass = "",
+  readoutClass = "",
 }) {
   return `
-    <div class="diagnostic-layout">
-      <section class="monitor-card diagnostic-readout">
+    <div class="diagnostic-layout ${layoutClass}">
+      <section class="monitor-card diagnostic-readout ${readoutClass}">
         <div class="section-title">
           <h3>${title}</h3>
           <span>${statusTag}</span>
@@ -282,7 +531,7 @@ export function createAppShell() {
           `
             <section class="metric-grid">
               ${metricCard("切削力", "data-force-value", "128", "N", "法向接触稳定", "data-force-detail", "Fx 46 N / Fy 31 N / Fz 108 N")}
-              ${metricCard("振动RMS", "data-vibration-value", "0.42", "g", "低频响应可控", "data-vibration-detail", "峰值 0.71 g / 主频 116 Hz")}
+              ${metricCard("振动RMS", "data-vibration-value", "--", "m/s²", "等待导入", "data-vibration-detail", "未导入三轴加速度数据")}
               ${metricCard("声发射", "data-ae-value", "31", "dB", "高频特征占位", "data-ae-detail", "能量 0.86 V²·s / 计数 248")}
               ${metricCard("粗糙度预测", "data-roughness-value", "Ra 1.62", "μm", "本地模拟，模型未接入", "data-roughness-detail", "输入占位：力 / 振动 / 声发射 / 主轴")}
             </section>
@@ -344,16 +593,19 @@ export function createAppShell() {
             statusTag: "接触稳定",
             focus: ["合力均值和法向力是否稳定", "Peak / 峰峰值是否突然升高", "Fx/Fy/Fz方向变化是否对应工具姿态"],
             rows: [
-              ["Fx", "46 N"],
-              ["Fy", "31 N"],
-              ["Fz", "108 N"],
-              ["Peak", "142 N"],
-              ["RMS", "96 N"],
+              ["Fx", '<span data-force-fx>46</span> N'],
+              ["Fy", '<span data-force-fy>31</span> N'],
+              ["Fz", '<span data-force-fz>108</span> N'],
+              ["Peak", '<span data-force-p2p>142</span> N'],
+              ["RMS", '<span data-force-mean>96</span> N'],
               ["阈值", "300 N"],
             ],
             charts: [
               timeDomainChart("合力时域波形", "优先看波动、冲击尖峰和接触丢失；当前为模拟波形，不代表真实采样。", "force"),
+              forceReplayPanel(),
             ],
+            layoutClass: "force-layout",
+            readoutClass: "compact-readout",
             summary: [
               ["采样窗口", "最近 5 s"],
               ["峰峰值", "36 N"],
@@ -371,27 +623,28 @@ export function createAppShell() {
             title: "振动RMS",
             valueAttr: "data-vibration-detail-value",
             initial: "0.42",
-            unit: "g",
-            status: "状态判断：低频响应可控；振动页应重点看 FFT频谱、主频和峰值因子。",
-            statusTag: "低频可控",
+            unit: "m/s²",
+            status: "状态判断：未导入三轴加速度数据；导入 YE6275D txt/csv 后开始回放窗口特征。",
+            statusTag: "待导入",
             focus: ["三轴 RMS 和 Peak 是否接近阈值", "FFT频谱主频是否稳定", "峰值因子是否提示冲击"],
             rows: [
-              ["Ax", "0.18 g"],
-              ["Ay", "0.21 g"],
-              ["Az", "0.31 g"],
-              ["Peak", "0.71 g"],
-              ["主频", "116 Hz"],
-              ["峰值因子", "1.69"],
+              ["Ax RMS", '<span data-acc-rms-x>--</span> m/s²'],
+              ["Ay RMS", '<span data-acc-rms-y>--</span> m/s²'],
+              ["Az RMS", '<span data-acc-rms-z>--</span> m/s²'],
+              ["Peak", '<span data-acc-peak-abs>--</span> m/s²'],
+              ["主导轴", '<span data-acc-dominant-axis>--</span>'],
+              ["采样率", '<span data-acc-sample-rate>--</span> Hz'],
             ],
             charts: [
-              timeDomainChart("三轴时域波形", "用于观察瞬态冲击和低频摆动；当前为归一化模拟曲线。", "vibration"),
+              timeDomainChart("三轴时域波形", "用于观察瞬态冲击和低频摆动；当前曲线为归一化显示，数值来自窗口特征。", "vibration"),
+              accelerationReplayPanel(),
               spectrumChart("FFT频谱", "用于定位主频、倍频和异常频段；当前为示意频谱。"),
             ],
             summary: [
-              ["低频能量", "42%"],
-              ["中频能量", "36%"],
-              ["高频能量", "22%"],
-              ["阈值", "1.20 g"],
+              ["数据来源", '<span data-acceleration-source>未导入三轴加速度数据</span>'],
+              ["回放窗口", '<span data-acceleration-window>待载入</span>'],
+              ["合成RMS", '<span data-acc-vector-rms>--</span> m/s²'],
+              ["峰峰值", '<span data-acc-peak-to-peak>--</span> m/s²'],
             ],
           }),
         )}

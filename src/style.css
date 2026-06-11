@@ -568,6 +568,297 @@ button {
   stroke: #d58cff;
 }
 
+.chart-axis path {
+  fill: none;
+  stroke: #5e7890;
+  stroke-width: 1.4;
+}
+
+.chart-axis text,
+.wave-legend text,
+.wave-caption {
+  fill: #9fbacf;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 11px;
+}
+
+.force-scope-card {
+  background: #101923;
+}
+
+.scope-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.force-layout .scope-layout {
+  grid-template-columns: minmax(0, 1fr) 220px;
+}
+
+.scope-plot-panel,
+.scope-settings-panel {
+  border: 1px solid #263647;
+  border-radius: 6px;
+  background: #eef0f1;
+  color: #1c2730;
+  overflow: hidden;
+}
+
+.scope-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 30px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #c5cbd0;
+  color: #1c2730;
+  font-size: 13px;
+}
+
+.scope-tools {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 24px;
+  border: 1px solid #9da8b2;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #243341;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.force-scope-svg {
+  display: block;
+  width: 100%;
+  min-height: 260px;
+}
+
+.force-layout .force-scope-svg {
+  min-height: 360px;
+}
+
+.scope-paper {
+  fill: #f8f8f7;
+}
+
+.scope-grid path {
+  fill: none;
+  stroke: #d8dde1;
+  stroke-width: 1;
+}
+
+.scope-axis path {
+  fill: none;
+  stroke: #1f2932;
+  stroke-width: 1.4;
+}
+
+.scope-axis text {
+  fill: #26323b;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+}
+
+.scope-line {
+  fill: none;
+  stroke-width: 1.05;
+  vector-effect: non-scaling-stroke;
+}
+
+.scope-hit-area {
+  fill: transparent;
+  cursor: crosshair;
+  pointer-events: all;
+}
+
+.scope-hover,
+.scope-hover-tooltip {
+  pointer-events: none;
+  transition: opacity 0.08s ease;
+}
+
+.scope-hover-line {
+  stroke: #ff4f90;
+  stroke-width: 1.2;
+}
+
+.scope-hover-dot {
+  stroke: #ffffff;
+  stroke-width: 1;
+}
+
+.scope-hover-dot--ch1,
+.scope-tooltip-swatch--ch1 {
+  fill: #ff2d2d;
+}
+
+.scope-hover-dot--ch2,
+.scope-tooltip-swatch--ch2 {
+  fill: #16d92e;
+}
+
+.scope-hover-dot--ch3,
+.scope-tooltip-swatch--ch3 {
+  fill: #2749ff;
+}
+
+.scope-hover-dot--ch4,
+.scope-tooltip-swatch--ch4 {
+  fill: #a000a8;
+}
+
+.scope-hover-dot--ch5,
+.scope-tooltip-swatch--ch5 {
+  fill: #9a9300;
+}
+
+.scope-hover-dot--ch6,
+.scope-tooltip-swatch--ch6 {
+  fill: #0c1f99;
+}
+
+.scope-tooltip-shadow {
+  fill: rgba(0, 0, 0, 0.34);
+}
+
+.scope-tooltip-panel {
+  fill: #11171e;
+  stroke: #dbe3ea;
+  stroke-width: 1;
+}
+
+.scope-tooltip-time,
+.scope-tooltip-label,
+.scope-tooltip-value {
+  fill: #ffffff;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.scope-tooltip-time {
+  fill: #d7e5f2;
+  font-size: 11px;
+}
+
+.scope-line--ch1 {
+  stroke: #ff2d2d;
+}
+
+.scope-line--ch2 {
+  stroke: #16d92e;
+}
+
+.scope-line--ch3 {
+  stroke: #2749ff;
+}
+
+.scope-line--ch4 {
+  stroke: #a000a8;
+}
+
+.scope-line--ch5 {
+  stroke: #9a9300;
+}
+
+.scope-line--ch6 {
+  stroke: #0c1f99;
+}
+
+.scope-settings-panel {
+  padding: 6px;
+}
+
+.scope-settings-panel h4 {
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #c5cbd0;
+  color: #1c2730;
+  font-size: 13px;
+}
+
+.scope-settings-table {
+  margin: 0;
+  color: #26323b;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+}
+
+.scope-settings-table th,
+.scope-settings-table td {
+  border: 1px solid #cbd2d8;
+  padding: 4px 5px;
+  white-space: nowrap;
+}
+
+.scope-settings-table th {
+  color: #26323b;
+  background: #e3e7ea;
+}
+
+.scope-settings-table label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scope-swatch {
+  display: block;
+  width: 28px;
+  height: 18px;
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 0 1px #8d98a2;
+}
+
+.axis-wave {
+  fill: none;
+  stroke-width: 2.4;
+}
+
+.axis-wave--x {
+  stroke: #32d7ff;
+}
+
+.axis-wave--y {
+  stroke: #69f0c7;
+}
+
+.axis-wave--z {
+  stroke: #ffb15f;
+}
+
+.wave-marker path {
+  stroke: #d58cff;
+  stroke-dasharray: 4 4;
+  stroke-width: 1.4;
+}
+
+.wave-marker circle {
+  fill: #d58cff;
+  stroke: #ffffff;
+  stroke-width: 1;
+}
+
+.wave-legend text:nth-child(1) {
+  fill: #32d7ff;
+}
+
+.wave-legend text:nth-child(2) {
+  fill: #69f0c7;
+}
+
+.wave-legend text:nth-child(3) {
+  fill: #ffb15f;
+}
+
 .trend-note {
   margin: 5px 0 0;
   color: #86a8bd;
@@ -606,6 +897,52 @@ th {
   gap: 10px;
 }
 
+.force-layout {
+  grid-template-columns: 1fr;
+}
+
+.force-layout .diagnostic-main {
+  gap: 8px;
+}
+
+.compact-readout {
+  display: grid;
+  grid-template-columns: 150px 130px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: auto;
+  padding: 10px;
+}
+
+.compact-readout .section-title {
+  margin-bottom: 0;
+}
+
+.compact-readout .big-number {
+  margin: 0;
+}
+
+.compact-readout .big-number strong {
+  font-size: 38px;
+}
+
+.compact-readout .diagnostic-status,
+.compact-readout h4,
+.compact-readout .focus-list {
+  display: none;
+}
+
+.compact-readout .detail-table {
+  grid-template-columns: repeat(6, minmax(72px, 1fr));
+  margin-top: 0;
+  gap: 6px;
+}
+
+.compact-readout .detail-table div {
+  min-height: 48px;
+  padding: 8px;
+}
+
 .diagnostic-readout,
 .diagnostic-chart,
 .feature-panel {
@@ -618,8 +955,40 @@ th {
   gap: 10px;
 }
 
+.replay-selector {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin: 10px 0 8px;
+  color: #8cabbe;
+  font-size: 12px;
+}
+
+.replay-selector select {
+  min-height: 32px;
+  border: 1px solid #263647;
+  border-radius: 5px;
+  padding: 6px 8px;
+  background: #0b1118;
+  color: #ffffff;
+}
+
+.replay-selector input {
+  display: none;
+}
+
+.tool-button.is-disabled {
+  pointer-events: none;
+  opacity: 0.48;
+}
+
 .detail-readout {
   min-height: 520px;
+}
+
+.diagnostic-readout.compact-readout {
+  min-height: auto;
 }
 
 .big-number {

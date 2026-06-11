@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "convert:path": "node scripts/convert-path-csv.js",
-    "convert:temperature": "node scripts/convert-temperature-csv.js"
+    "convert:temperature": "node scripts/convert-temperature-csv.js",
+    "convert:acceleration": "node scripts/convert-acceleration-csv.js",
+    "convert:acceleration:file": "node scripts/convert-acceleration-file.js",
+    "convert:force:file": "node scripts/convert-force-file.js"
   },
   "dependencies": {
     "three": "^0.179.1"

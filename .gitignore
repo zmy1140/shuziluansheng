@@ -6,6 +6,16 @@ dist/
 .vite/
 coverage/
 
+# Generated presentation/render outputs
+ppt_output/
+
+# Large local equipment reference binaries
+docs/equipment_reference/**/*.pdf
+docs/equipment_reference/**/*.ppt
+docs/equipment_reference/**/*.pptx
+docs/equipment_reference/**/*.docx
+docs/equipment_reference/**/*.xlsx
+
 # Local environment and secrets
 .env
 .env.*

@@ -71,6 +71,29 @@ npm.cmd run convert:temperature
 
 默认会读取 `data/demo/temperature_field.csv`，生成 `public/simulation/temperature_field.json`。格式说明见 `docs/temperature-field-format.md`。
 
+转换项目内三轴加速度样例：
+
+```powershell
+npm.cmd run convert:acceleration
+```
+
+默认会读取 `data/sanzhoujiasudu_data` 下的 `_xyz.csv` 样例，生成 `public/simulation/acceleration_features.json`。
+
+转换任意 YE6275D 导出的三列 txt/csv：
+
+```powershell
+npm.cmd run convert:acceleration:file -- "D:\YE6275D\0608data\0608datahuangdong01.txt"
+```
+
+该命令会在原始文件同目录生成同名 JSON；如果同名 JSON 已存在，则直接复用。
+
+转换 iDAS R&D 导出的六维力 CH1-CH6 txt：
+```powershell
+npm.cmd run convert:force:file -- "D:\iDAS R&D\Data\10sqingya.txt" --sample-rate 200
+```
+
+该命令会在原始文件同目录生成同名 JSON；当前六维力样例按用户确认的 `200 Hz` 采样频率处理。
+
 ## 导入 3D 模型
 
 1. 启动本地开发服务器。
