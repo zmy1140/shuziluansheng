@@ -260,7 +260,7 @@ function setForcePayload(payload, preferredRunId = payload.preferredRunId) {
 }
 
 function cacheKeyForForceFile(file) {
-  return `force-features:${file.name}:${file.size}:${file.lastModified}:200hz`;
+  return `force-features:${file.name}:${file.size}:${file.lastModified}:200hz:trace-v2`;
 }
 
 function cacheImportedForcePayload(file, payload) {
@@ -401,6 +401,7 @@ const forceScopeHitArea = shell.querySelector("[data-force-scope-hit-area]");
 const forceScopeCursor = shell.querySelector("[data-force-scope-cursor]");
 const forceScopeTooltip = shell.querySelector("[data-force-scope-tooltip]");
 const forceTooltipTime = shell.querySelector("[data-force-tooltip-time]");
+const forceScopeNote = shell.querySelector("[data-force-scope-note]");
 const forceTooltipValues = new Map(
   [...shell.querySelectorAll("[data-force-tooltip-value]")].map((node) => [
     node.dataset.forceTooltipValue,
@@ -413,13 +414,48 @@ const forceTooltipDots = new Map(
     node,
   ]),
 );
+const forceScopeSeries = new Map(
+  [...shell.querySelectorAll("[data-force-scope-series]")].map((node) => [
+    node.dataset.forceScopeSeries,
+    node,
+  ]),
+);
+const forceScopeCurrentValues = new Map(
+  [...shell.querySelectorAll("[data-force-scope-current]")].map((node) => [
+    node.dataset.forceScopeCurrent,
+    node,
+  ]),
+);
+const forceScopePeakValues = new Map(
+  [...shell.querySelectorAll("[data-force-scope-peak]")].map((node) => [
+    node.dataset.forceScopePeak,
+    node,
+  ]),
+);
 let forceScopeZoom = 1;
+let activeForceScopeWindow;
+
+const forceScopeLanes = {
+  ch1: 72,
+  ch2: 104,
+  ch3: 136,
+  ch4: 168,
+  ch5: 200,
+  ch6: 232,
+};
+
+const defaultForceScopeNote = forceScopeNote?.textContent ?? "";
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
 function forceScopeValue(channelId, t) {
+  const traceValue = traceValueAt(activeForceScopeWindow?.trace?.[channelId], t);
+  if (traceValue !== undefined) {
+    return traceValue;
+  }
+
   const ripple = Math.sin(t * 620) * 0.18 + Math.sin(t * 1040) * 0.08;
   if (channelId === "ch1") {
     return 14.8 + Math.sin(t * 10.5) * 1.1 + Math.exp(-t * 12) * Math.sin(t * 58) * 0.55 + ripple;
@@ -445,9 +481,92 @@ function forceScopeY(value) {
   return clamp(161 - value * 5.1, 34, 244);
 }
 
+function mean(values) {
+  if (!values.length) {
+    return 0;
+  }
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function peakToPeak(values) {
+  if (!values.length) {
+    return 0;
+  }
+  return Math.max(...values) - Math.min(...values);
+}
+
+function traceValueAt(values, t) {
+  if (!values?.length) {
+    return undefined;
+  }
+
+  if (values.length === 1) {
+    return values[0];
+  }
+
+  const exactIndex = clamp(t, 0, 1) * (values.length - 1);
+  const lowIndex = Math.floor(exactIndex);
+  const highIndex = Math.min(values.length - 1, lowIndex + 1);
+  const ratio = exactIndex - lowIndex;
+  return values[lowIndex] + (values[highIndex] - values[lowIndex]) * ratio;
+}
+
 function formatScopeTime(t) {
   const seconds = 6.325 + t;
   return `00:00:${seconds.toFixed(3).padStart(6, "0")}`;
+}
+
+function forceScopeDisplayY(channelId, value) {
+  const trace = activeForceScopeWindow?.trace?.[channelId];
+  if (!trace?.length) {
+    return forceScopeY(value);
+  }
+
+  const center = mean(trace);
+  const maxDeviation = Math.max(
+    ...trace.map((sample) => Math.abs(sample - center)),
+    Math.abs(value - center),
+    1e-6,
+  );
+  return clamp(forceScopeLanes[channelId] - ((value - center) / maxDeviation) * 20, 34, 244);
+}
+
+function forceScopePath(channelId) {
+  return Array.from({ length: 150 }, (_, index) => {
+    const t = index / 149;
+    const x = 70 + t * 560;
+    const value = forceScopeValue(channelId, t);
+    const y = forceScopeDisplayY(channelId, value);
+    return `${index === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+  }).join(" ");
+}
+
+function updateForceScopeFromWindow(forceWindow) {
+  if (!forceWindow?.trace) {
+    return;
+  }
+
+  activeForceScopeWindow = forceWindow;
+  forceScopeSeries.forEach((node, channelId) => {
+    node.setAttribute("d", forceScopePath(channelId));
+  });
+
+  Object.entries(forceWindow.trace).forEach(([channelId, values]) => {
+    const latestValue = values[values.length - 1];
+    forceScopeCurrentValues.get(channelId)?.replaceChildren(latestValue.toFixed(3));
+    forceScopePeakValues.get(channelId)?.replaceChildren(peakToPeak(values).toFixed(3));
+  });
+
+  if (forceScopeNote) {
+    forceScopeNote.textContent =
+      "已根据当前 iDAS 窗口重绘 CH1-CH6 曲线；为便于观察波动，曲线按各通道窗口自适应居中显示。";
+  }
+}
+
+function resetForceScopeNote() {
+  if (!activeForceScopeWindow && forceScopeNote) {
+    forceScopeNote.textContent = defaultForceScopeNote;
+  }
 }
 
 function updateForceScopeHover(clientX) {
@@ -472,7 +591,7 @@ function updateForceScopeHover(clientX) {
   forceTooltipValues.forEach((node, channelId) => {
     const value = forceScopeValue(channelId, t);
     node.textContent = value.toFixed(2);
-    forceTooltipDots.get(channelId)?.setAttribute("cy", forceScopeY(value).toFixed(1));
+    forceTooltipDots.get(channelId)?.setAttribute("cy", forceScopeDisplayY(channelId, value).toFixed(1));
   });
 }
 
@@ -595,6 +714,7 @@ setInterval(() => {
   metricNodes.forceDetailValue.textContent = force.toFixed(0);
 
   if (forceWindow) {
+    updateForceScopeFromWindow(forceWindow);
     setAll(metricNodes.forceSource, `${forceReplay.payload.source}：${forceReplay.run.label}`);
     setAll(
       metricNodes.forceWindow,
@@ -613,6 +733,7 @@ setInterval(() => {
     setAll(metricNodes.forceFz, fallbackFz.toFixed(0));
     setAll(metricNodes.forceMean, fallbackMean.toFixed(0));
     setAll(metricNodes.forceP2p, fallbackPeak.toFixed(0));
+    resetForceScopeNote();
   }
 
   metricNodes.vibration.textContent = vibration === undefined ? "--" : vibration.toFixed(2);

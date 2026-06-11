@@ -200,6 +200,34 @@ describe("six-axis force data processing", () => {
     });
   });
 
+  test("keeps per-window six-channel force traces for waveform rendering", () => {
+    const run = createForceRun(
+      [
+        "CH1;CH2;CH3;CH4;CH5;CH6",
+        "0=10,1,2,0.1,0.2,0.3",
+        "1=12,2,3,0.2,0.3,0.4",
+        "2=14,3,4,0.3,0.4,0.5",
+      ].join("\n"),
+      {
+        id: "force-trace",
+        label: "force trace",
+        condition: "synthetic",
+        file: "force.txt",
+        sampleRateHz: 3,
+        windowSeconds: 1,
+      },
+    );
+
+    expect(run.windows[0].trace).toEqual({
+      ch1: [10, 12, 14],
+      ch2: [1, 2, 3],
+      ch3: [2, 3, 4],
+      ch4: [0.1, 0.2, 0.3],
+      ch5: [0.2, 0.3, 0.4],
+      ch6: [0.3, 0.4, 0.5],
+    });
+  });
+
   test("builds a force replay payload for M8229/iDAS imports", () => {
     const run = createForceRun(
       [

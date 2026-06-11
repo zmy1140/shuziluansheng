@@ -269,6 +269,17 @@ describe("createAppShell", () => {
     expect(css).toContain(".scope-hover-tooltip");
   });
 
+  test("marks force scope table cells as live values for imported data", () => {
+    const shell = createAppShell();
+    const force = shell.querySelector("[data-view-panel='force']");
+
+    expect(force.querySelectorAll("[data-force-scope-current]")).toHaveLength(6);
+    expect(force.querySelectorAll("[data-force-scope-peak]")).toHaveLength(6);
+    expect(force.querySelector("[data-force-scope-current='ch1']")).not.toBeNull();
+    expect(force.querySelector("[data-force-scope-peak='ch6']")).not.toBeNull();
+    expect(force.querySelector("[data-force-scope-note]")).not.toBeNull();
+  });
+
   test("places force readout as a horizontal summary above the waveform", () => {
     const shell = createAppShell();
     const force = shell.querySelector("[data-view-panel='force']");

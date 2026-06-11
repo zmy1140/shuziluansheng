@@ -273,8 +273,8 @@ function forceScopeChart(title, note) {
                     <tr>
                       <td><label><input type="checkbox" checked disabled />${label}</label></td>
                       <td><span class="scope-swatch" style="background:${color}"></span></td>
-                      <td>${value}</td>
-                      <td>${peak}</td>
+                      <td data-force-scope-current="${label.toLowerCase()}">${value}</td>
+                      <td data-force-scope-peak="${label.toLowerCase()}">${peak}</td>
                       <td>${offset}</td>
                     </tr>
                   `,
@@ -284,7 +284,7 @@ function forceScopeChart(title, note) {
           </table>
         </aside>
       </div>
-      <p class="chart-note">${note}</p>
+      <p class="chart-note" data-force-scope-note>${note}</p>
     </section>
   `;
 }

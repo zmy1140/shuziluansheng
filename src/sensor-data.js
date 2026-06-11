@@ -59,6 +59,10 @@ function peakToPeak(values) {
   return Math.max(...values) - Math.min(...values);
 }
 
+function traceValues(values) {
+  return values.map((value) => round(value));
+}
+
 function dominantAxisFromRms(rmsX, rmsY, rmsZ) {
   const axes = [
     ["X", rmsX],
@@ -328,6 +332,14 @@ export function createForceRun(forceText, {
       )),
       meanTorqueNm: round(mean(torqueMagnitudes)),
       dominantForceAxis: dominantForceAxisFromMeans(meanFx, meanFy, meanFz),
+      trace: {
+        ch1: traceValues(fxValues),
+        ch2: traceValues(fyValues),
+        ch3: traceValues(fzValues),
+        ch4: traceValues(mxValues),
+        ch5: traceValues(myValues),
+        ch6: traceValues(mzValues),
+      },
     });
   }
 
