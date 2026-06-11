@@ -228,9 +228,9 @@ function forceScopeChart(title, note) {
               <text x="48" y="165">0</text>
               <text x="36" y="210">-10</text>
               <text x="36" y="255">-20</text>
-              <text x="72" y="284">00:00:06.325</text>
-              <text x="294" y="284">00:00:06.825</text>
-              <text x="515" y="284">00:00:07.325</text>
+              <text x="72" y="284" data-force-scope-time-label="start">00:00:06.325</text>
+              <text x="294" y="284" data-force-scope-time-label="middle">00:00:06.825</text>
+              <text x="515" y="284" data-force-scope-time-label="end">00:00:07.325</text>
             </g>
             <g clip-path="url(#forceScopeClip)">
               <g data-force-scope-viewport>

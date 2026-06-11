@@ -224,6 +224,7 @@ function setForceRun(runId) {
     forceRunSelect.value = selectedRun.id;
   }
   step = 0;
+  startForceScopePlayback(selectedRun);
 }
 
 function setForcePayload(payload, preferredRunId = payload.preferredRunId) {
@@ -257,10 +258,11 @@ function setForcePayload(payload, preferredRunId = payload.preferredRunId) {
   }
 
   step = 0;
+  startForceScopePlayback(preferredRun);
 }
 
 function cacheKeyForForceFile(file) {
-  return `force-features:${file.name}:${file.size}:${file.lastModified}:200hz:trace-v2`;
+  return `force-features:${file.name}:${file.size}:${file.lastModified}:200hz:smooth-trace-v3`;
 }
 
 function cacheImportedForcePayload(file, payload) {
@@ -393,6 +395,12 @@ forceFileInput?.addEventListener("change", async (event) => {
 
 const forceScopeViewport = shell.querySelector("[data-force-scope-viewport]");
 const forceScopeWindow = shell.querySelector("[data-force-scope-window]");
+const forceScopeTimeLabels = new Map(
+  [...shell.querySelectorAll("[data-force-scope-time-label]")].map((node) => [
+    node.dataset.forceScopeTimeLabel,
+    node,
+  ]),
+);
 const forceScopeZoomIn = shell.querySelector("[data-force-scope-zoom-in]");
 const forceScopeZoomOut = shell.querySelector("[data-force-scope-zoom-out]");
 const forceScopeReset = shell.querySelector("[data-force-scope-reset]");
@@ -434,6 +442,9 @@ const forceScopePeakValues = new Map(
 );
 let forceScopeZoom = 1;
 let activeForceScopeWindow;
+let activeForceScopeRun;
+let forceScopeAnimationId;
+let forceScopePlaybackStartedAt;
 
 const forceScopeLanes = {
   ch1: 72,
@@ -445,13 +456,15 @@ const forceScopeLanes = {
 };
 
 const defaultForceScopeNote = forceScopeNote?.textContent ?? "";
+const forceScopeBaseWindowSeconds = 1;
+const forceScopeSampleCount = 220;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
 function forceScopeValue(channelId, t) {
-  const traceValue = traceValueAt(activeForceScopeWindow?.trace?.[channelId], t);
+  const traceValue = traceValueAt(activeForceScopeWindow?.[channelId], t);
   if (traceValue !== undefined) {
     return traceValue;
   }
@@ -512,12 +525,12 @@ function traceValueAt(values, t) {
 }
 
 function formatScopeTime(t) {
-  const seconds = 6.325 + t;
+  const seconds = Math.max(0, t);
   return `00:00:${seconds.toFixed(3).padStart(6, "0")}`;
 }
 
 function forceScopeDisplayY(channelId, value) {
-  const trace = activeForceScopeWindow?.trace?.[channelId];
+  const trace = activeForceScopeWindow?.[channelId];
   if (!trace?.length) {
     return forceScopeY(value);
   }
@@ -541,25 +554,93 @@ function forceScopePath(channelId) {
   }).join(" ");
 }
 
-function updateForceScopeFromWindow(forceWindow) {
-  if (!forceWindow?.trace) {
+function forceTraceValueAt(run, channelId, timeSeconds) {
+  const values = run?.trace?.[channelId];
+  if (!values?.length) {
+    return undefined;
+  }
+
+  if (values.length === 1) {
+    return values[0];
+  }
+
+  const duration = run.summary.durationSeconds || values.length / run.sampleRateHz;
+  const wrappedTime = ((timeSeconds % duration) + duration) % duration;
+  const exactIndex = wrappedTime * run.sampleRateHz;
+  const lowIndex = Math.floor(exactIndex) % values.length;
+  const highIndex = (lowIndex + 1) % values.length;
+  const ratio = exactIndex - Math.floor(exactIndex);
+  return values[lowIndex] + (values[highIndex] - values[lowIndex]) * ratio;
+}
+
+function buildForceVisibleTrace(run, channelId, startSeconds, visibleSeconds) {
+  return Array.from({ length: forceScopeSampleCount }, (_, index) => {
+    const ratio = index / (forceScopeSampleCount - 1);
+    return forceTraceValueAt(run, channelId, startSeconds + ratio * visibleSeconds);
+  }).filter((value) => value !== undefined);
+}
+
+function setForceScopeTimeLabels(startSeconds, visibleSeconds) {
+  forceScopeTimeLabels.get("start")?.replaceChildren(formatScopeTime(startSeconds));
+  forceScopeTimeLabels.get("middle")?.replaceChildren(formatScopeTime(startSeconds + visibleSeconds / 2));
+  forceScopeTimeLabels.get("end")?.replaceChildren(formatScopeTime(startSeconds + visibleSeconds));
+}
+
+function updateForceScopeFromRun(run, playbackSeconds) {
+  if (!run?.trace) {
     return;
   }
 
-  activeForceScopeWindow = forceWindow;
+  const duration = run.summary.durationSeconds || run.trace.ch1.length / run.sampleRateHz;
+  const visibleSeconds = forceScopeBaseWindowSeconds / forceScopeZoom;
+  const startSeconds = playbackSeconds % duration;
+  activeForceScopeWindow = Object.fromEntries(
+    Object.keys(run.trace).map((channelId) => [
+      channelId,
+      buildForceVisibleTrace(run, channelId, startSeconds, visibleSeconds),
+    ]),
+  );
+
   forceScopeSeries.forEach((node, channelId) => {
     node.setAttribute("d", forceScopePath(channelId));
   });
 
-  Object.entries(forceWindow.trace).forEach(([channelId, values]) => {
+  Object.entries(activeForceScopeWindow).forEach(([channelId, values]) => {
     const latestValue = values[values.length - 1];
     forceScopeCurrentValues.get(channelId)?.replaceChildren(latestValue.toFixed(3));
     forceScopePeakValues.get(channelId)?.replaceChildren(peakToPeak(values).toFixed(3));
   });
 
+  setForceScopeTimeLabels(startSeconds, visibleSeconds);
+  if (forceScopeWindow) {
+    forceScopeWindow.textContent =
+      `${(visibleSeconds / 5).toFixed(2)} s/div`;
+  }
   if (forceScopeNote) {
     forceScopeNote.textContent =
-      "已根据当前 iDAS 窗口重绘 CH1-CH6 曲线；为便于观察波动，曲线按各通道窗口自适应居中显示。";
+      "已按整段 iDAS 数据连续滚动显示 CH1-CH6 曲线；时间轴和曲线随播放时间平滑向左推进。";
+  }
+}
+
+function runForceScopeAnimation(timestamp) {
+  if (!activeForceScopeRun) {
+    forceScopeAnimationId = undefined;
+    return;
+  }
+
+  if (forceScopePlaybackStartedAt === undefined) {
+    forceScopePlaybackStartedAt = timestamp;
+  }
+
+  updateForceScopeFromRun(activeForceScopeRun, (timestamp - forceScopePlaybackStartedAt) / 1000);
+  forceScopeAnimationId = requestAnimationFrame(runForceScopeAnimation);
+}
+
+function startForceScopePlayback(run) {
+  activeForceScopeRun = run?.trace ? run : undefined;
+  forceScopePlaybackStartedAt = undefined;
+  if (activeForceScopeRun && forceScopeAnimationId === undefined) {
+    forceScopeAnimationId = requestAnimationFrame(runForceScopeAnimation);
   }
 }
 
@@ -714,7 +795,6 @@ setInterval(() => {
   metricNodes.forceDetailValue.textContent = force.toFixed(0);
 
   if (forceWindow) {
-    updateForceScopeFromWindow(forceWindow);
     setAll(metricNodes.forceSource, `${forceReplay.payload.source}：${forceReplay.run.label}`);
     setAll(
       metricNodes.forceWindow,

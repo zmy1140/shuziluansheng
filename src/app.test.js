@@ -280,6 +280,15 @@ describe("createAppShell", () => {
     expect(force.querySelector("[data-force-scope-note]")).not.toBeNull();
   });
 
+  test("marks force scope time labels for rolling playback updates", () => {
+    const shell = createAppShell();
+    const force = shell.querySelector("[data-view-panel='force']");
+
+    expect(force.querySelector("[data-force-scope-time-label='start']")).not.toBeNull();
+    expect(force.querySelector("[data-force-scope-time-label='middle']")).not.toBeNull();
+    expect(force.querySelector("[data-force-scope-time-label='end']")).not.toBeNull();
+  });
+
   test("places force readout as a horizontal summary above the waveform", () => {
     const shell = createAppShell();
     const force = shell.querySelector("[data-view-panel='force']");

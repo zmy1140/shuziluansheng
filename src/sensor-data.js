@@ -283,6 +283,14 @@ export function createForceRun(forceText, {
   const samples = parseForceTxt(forceText);
   const windowSize = Math.max(1, Math.round(sampleRateHz * windowSeconds));
   const windows = [];
+  const trace = {
+    ch1: traceValues(samples.map((sample) => sample.fx)),
+    ch2: traceValues(samples.map((sample) => sample.fy)),
+    ch3: traceValues(samples.map((sample) => sample.fz)),
+    ch4: traceValues(samples.map((sample) => sample.mx)),
+    ch5: traceValues(samples.map((sample) => sample.my)),
+    ch6: traceValues(samples.map((sample) => sample.mz)),
+  };
 
   for (let offset = 0; offset < samples.length; offset += windowSize) {
     const chunk = samples.slice(offset, offset + windowSize);
@@ -367,6 +375,7 @@ export function createForceRun(forceText, {
       maxPeakForce: round(Math.max(...peakForceValues)),
       maxPeakToPeakForce: round(Math.max(...peakToPeakValues)),
     },
+    trace,
     windows,
   };
 }
